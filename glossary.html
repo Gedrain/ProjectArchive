@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СЛОВАРЬ ТЕРМИНОВ // АРХИВ МСР</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        /* ИНТЕРАКТИВНЫЙ СЛОВАРЬ */
+        .glossary-wrapper {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            height: 700px;
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            padding: 20px;
+        }
+
+        /* Левая панель: Список терминов */
+        .term-list {
+            border-right: 2px dashed #4b4940;
+            padding-right: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Стили скроллбара для списка */
+        .term-list::-webkit-scrollbar { width: 6px; }
+        .term-list::-webkit-scrollbar-track { background: #1a1a17; }
+        .term-list::-webkit-scrollbar-thumb { background: #4b4940; }
+
+        .term-btn {
+            background: transparent;
+            color: var(--terminal-text);
+            border: 1px solid transparent;
+            border-left: 3px solid #4b4940;
+            padding: 12px 15px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .term-btn:hover {
+            background: rgba(205, 200, 176, 0.1);
+            border-left-color: var(--accent-red);
+            color: var(--bg-base);
+        }
+
+        .term-btn.active {
+            background: var(--text-main);
+            color: var(--bg-base);
+            border-left-color: var(--accent-red);
+        }
+
+        /* Правая панель: Экран расшифровки */
+        .term-display {
+            padding: 30px;
+            background: #0a0a0c;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .display-header {
+            color: #88c0d0;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            border-bottom: 2px solid #4b4940;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .term-title {
+            font-size: 3rem;
+            color: var(--accent-red);
+            font-family: var(--font-mono);
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(178, 67, 56, 0.3);
+        }
+
+        .term-desc {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            color: #cdc8b0;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .decrypting {
+            color: #ebcb8b; /* Желтый цвет для анимации перебора */
+        }
+
+        @media (max-width: 1024px) {
+            .glossary-wrapper { grid-template-columns: 1fr; height: auto; }
+            .term-list { border-right: none; border-bottom: 2px dashed #4b4940; padding-bottom: 20px; max-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html" class="active">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag" style="background: var(--text-main); color: var(--bg-base);">[ СПРАВОЧНИК_GLS ]</span>
+            <h1 class="chapter-title">Глоссарий терминов</h1>
+        </div>
+
+        <div class="glossary-wrapper">
+            <div class="term-list" id="term-list">
+                </div>
+
+            <div class="term-display">
+                <div class="display-header">
+                    <span>STATUS: <span id="status-text" style="color: #a3be8c;">IDLE</span></span>
+                    <span>ENCRYPTION: AES-256</span>
+                </div>
+                <div class="term-title" id="display-title">SELECT_DATA</div>
+                <div class="term-desc" id="display-desc">Ожидание выбора термина из базы данных для инициации расшифровки...</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title" style="color: var(--bg-base);">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ СПРАВОЧНИКА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        // База данных терминов из твоего проекта
+        const dictionary = {
+            "AES-256": "Advanced Encryption Standard. Симметричный алгоритм блочного шифрования с длиной ключа 256 бит. Является стандартом военной и правительственной связи. В проекте используется в режиме CTR (счетчика) для защиты пакетов в радиоэфире.",
+            "BGP": "Border Gateway Protocol. Основной протокол динамической маршрутизации в глобальной сети Интернет. Управляет тем, как пакеты данных перемещаются между автономными системами провайдеров. Уязвим к человеческим ошибкам (BGP Hijacking).",
+            "BMS": "Battery Management System. Электронная плата, защищающая аккумуляторную батарею. Контролирует напряжение, предотвращает глубокий разряд (Cut-off) и перезаряд, обеспечивая безопасность автономного узла.",
+            "CSS": "Chirp Spread Spectrum. Метод расширения спектра, использующий широкополосные линейно-частотные импульсы (чирпы). Позволяет принимать сигналы, уровень которых значительно ниже уровня фонового шума.",
+            "DPI": "Deep Packet Inspection. Программно-аппаратная технология глубокого анализа сетевого трафика. Позволяет провайдерам сканировать содержимое пакетов, блокировать VPN и применять политическую цензуру.",
+            "Duty Cycle": "Рабочий цикл (Эфирное время). Законодательное ограничение, определяющее процент времени, в течение которого радиоустройство имеет право излучать сигнал. В диапазоне 868 МГц лимит обычно составляет 1% (36 секунд в час).",
+            "ECDH": "Elliptic-Curve Diffie–Hellman. Протокол обмена ключами на эллиптических кривых (Curve25519). Позволяет двум узлам через открытый радиоканал безопасно вычислить общий секретный ключ для личной переписки.",
+            "Geofencing": "Геофенсинг. Аппаратное или программное ограничение работы устройства в заданных GPS-координатах. Активно применяется в коммерческих спутниковых системах (Starlink) для блокировки связи в определенных регионах.",
+            "LiFePO4": "Литий-железо-фосфатный аккумулятор. Тип батареи, отличающийся экстремальной термической стабильностью (не взрывается при повреждении), способностью работать при -30°C и огромным ресурсом (до 5000 циклов).",
+            "LoRa": "Long Range. Физический уровень (PHY) радиомодуляции на базе CSS. Разработан компанией Semtech. Обеспечивает сверхдальнюю связь (десятки километров) при микроскопическом энергопотреблении (милливатты).",
+            "Mesh-сеть": "Ячеистая топология сети. Децентрализованная архитектура, где отсутствует главный сервер или базовая станция. Каждое устройство абонента выступает в роли маршрутизатора и ретранслятора для других.",
+            "MPPT": "Maximum Power Point Tracking. Интеллектуальный алгоритм контроллера заряда. Динамически конвертирует излишки напряжения солнечной панели в зарядный ток (DC-DC), выжимая максимум энергии даже в пасмурную погоду.",
+            "Protobuf": "Protocol Buffers. Бинарный протокол сериализации данных от Google. Позволяет сжимать информацию в десятки раз эффективнее JSON, что критически важно для узкополосных радиоканалов.",
+            "SIGINT": "Signals Intelligence. Радиоэлектронная разведка. Военные и государственные комплексы, перехватывающие радиоизлучение для анализа или точного определения координат (пеленгации) источника.",
+            "SNR": "Signal-to-Noise Ratio (Отношение сигнал/шум). В традиционной связи сигнал должен быть громче шума (SNR > 0). Благодаря выигрышу от обработки, LoRa может принимать данные при отрицательном SNR (до -20 дБ).",
+            "Spreading Factor": "SF (Коэффициент расширения). Базовый параметр LoRa. Чем выше SF (от 7 до 12), тем длиннее радиоимпульс. SF12 увеличивает дальность связи на максимум, но скорость передачи падает до минимума.",
+            "SPOF": "Single Point of Failure (Единая точка отказа). Компонент инфраструктуры, выход которого из строя приводит к каскадному обрушению всей системы (например, отключение электричества на сотовой вышке).",
+            "TCXO": "Термокомпенсированный кварцевый генератор. Электронный компонент радиомодуля, стабилизирующий частоту процессора при перепадах уличных температур. Необходим для совпадения частот зимой и летом.",
+            "TDOA": "Time Difference of Arrival (Разность времени прибытия). Математический метод пеленгации. Зная разницу во времени прихода радиосигнала на 3 разные станции, комплексы РЭБ могут вычислить точную геопозицию излучателя."
+        };
+
+        const listContainer = document.getElementById('term-list');
+        const titleEl = document.getElementById('display-title');
+        const descEl = document.getElementById('display-desc');
+        const statusEl = document.getElementById('status-text');
+
+        let decryptInterval = null;
+        const hexChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";
+
+        // Генерация кнопок
+        Object.keys(dictionary).forEach(term => {
+            const btn = document.createElement('button');
+            btn.className = 'term-btn';
+            btn.innerText = term;
+            btn.onclick = () => selectTerm(term, btn);
+            listContainer.appendChild(btn);
+        });
+
+        // Функция запуска анимации расшифровки
+        function selectTerm(term, btnElement) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.term-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // Подготавливаем терминал
+            clearInterval(decryptInterval);
+            titleEl.innerText = term;
+            statusEl.innerText = "DECRYPTING...";
+            statusEl.style.color = "#ebcb8b";
+            descEl.classList.add('decrypting');
+            
+            const targetText = dictionary[term];
+            let currentIter = 0;
+            const maxIters = 25; // Длительность анимации
+
+            decryptInterval = setInterval(() => {
+                let scrambled = "";
+                // Эффект "наползающей" расшифровки слева направо
+                let revealCount = Math.floor((currentIter / maxIters) * targetText.length);
+
+                for(let i = 0; i < targetText.length; i++) {
+                    if (i < revealCount) {
+                        scrambled += targetText[i]; // Уже расшифровано
+                    } else if (targetText[i] === " " || targetText[i] === "\n") {
+                        scrambled += targetText[i]; // Пробелы оставляем
+                    } else {
+                        // Мусорные символы
+                        scrambled += hexChars[Math.floor(Math.random() * hexChars.length)];
+                    }
+                }
+
+                descEl.innerText = scrambled;
+                currentIter++;
+
+                if (currentIter > maxIters) {
+                    clearInterval(decryptInterval);
+                    descEl.innerText = targetText;
+                    descEl.classList.remove('decrypting');
+                    statusEl.innerText = "DATA_REVEALED";
+                    statusEl.style.color = "#a3be8c";
+                }
+            }, 30); // Скорость обновления букв (30мс)
+        }
+
+        // Выбираем первый термин по умолчанию при загрузке
+        window.addEventListener('load', () => {
+            const firstBtn = listContainer.firstChild;
+            if(firstBtn) selectTerm(Object.keys(dictionary)[0], firstBtn);
+        });
+    </script>
+</body>
+</html>

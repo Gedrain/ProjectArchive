@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 06 // КРИПТОГРАФИЯ В ЭФИРЕ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+        .text-block li { margin-bottom: 10px; }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'SECURITY_PROTOCOL';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        .quote-block .tooltip { color: var(--bg-alt); border-bottom-color: var(--bg-alt); }
+        .quote-block .tooltip:hover { background: var(--bg-alt); color: var(--text-main); }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ ГЛАВЫ 6 */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 15px;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+        }
+
+        .btn-sim {
+            background: transparent; color: var(--bg-base);
+            border: 2px solid var(--bg-base); padding: 8px 20px;
+            font-family: var(--font-mono); font-weight: bold;
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--bg-base); color: var(--text-main); }
+
+        .btn-sim.active-btn { background: #88c0d0; color: #1a1a17; border-color: #88c0d0; }
+        
+        .btn-sim.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-sim.danger:hover { background: var(--accent-red); color: #fff; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            height: calc(100% - 120px);
+        }
+
+        #crypto-canvas {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1c 0%, #0a0a0c 100%);
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px; font-family: var(--font-mono); font-size: 1rem;
+            color: #a8a38f; overflow-y: auto; background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; }
+        .log-sys { color: #88c0d0; }
+        .log-warn { color: #ebcb8b; }
+        .log-ok { color: #a3be8c; font-weight: bold; }
+        .log-data { color: #cdc8b0; font-family: monospace; padding-left: 10px; border-left: 2px solid #4b4940;}
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html">ГЛ_02</a>
+            <a href="chapter3.html">ГЛ_03</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter5.html">ГЛ_05</a>
+            <a href="chapter6.html" class="active">ГЛ_06</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_06 ]</span>
+            <h1 class="chapter-title">Криптография в Эфире</h1>
+        </div>
+
+        <div class="quote-block">
+            Радиоэфир — это абсолютно открытая среда. Любой человек с SDR-приемником за 30 долларов может перехватить ваш сигнал. Поскольку у децентрализованной сети нет доверенного сервера-посредника, безопасность базируется исключительно на математической стойкости сквозного шифрования (E2EE) и аппаратной защите узлов.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>6.1. Симметричный ключ и режим CTR</h3>
+                    <p>Полезная нагрузка пакетов Meshtastic зашифровывается симметричным алгоритмом <span class="tooltip" data-text="Advanced Encryption Standard (AES) с длиной ключа 256 бит. Является стандартом военной и правительственной связи (Top Secret). Взлом перебором физически невозможен.">AES-256</span>. Сеть функционирует на базе предварительно переданного общего ключа (Pre-Shared Key / PSK).</p>
+                    
+                    
+
+                    <p>Критически важно, что используется режим счетчика — <span class="tooltip" data-text="Counter Mode. Режим работы блочного шифра, в котором генерируется псевдослучайная последовательность, суммируемая с открытым текстом операцией XOR.">CTR</span>. Он превращает блочный шифр в потоковый. Зачем это нужно? Обычный блочный шифр требует выравнивания данных (Padding), что добавляет пустые байты к сообщению. Режим CTR шифрует байт в байт. Сообщение из 10 символов после шифрования останется размером ровно 10 байт, что жизненно необходимо для экстремально узких каналов LoRa.</p>
+                </div>
+
+                <div class="text-block">
+                    <h3>6.2. Асимметричный обмен (Direct Messages)</h3>
+                    <p>Если вы хотите отправить личное сообщение конкретному узлу, чтобы другие участники вашей же сети не смогли его прочитать, применяется асимметричная криптография на эллиптических кривых.</p>
+                    
+                    
+
+                    <p>Узлы используют протокол <span class="tooltip" data-text="Elliptic-curve Diffie–Hellman (ECDH) на базе кривой Curve25519. Алгоритм, позволяющий Алисе и Бобу вычислить общий секретный ключ, пересылая по открытому радиоканалу только свои публичные ключи.">ECDH (Curve25519)</span>. Устройства обмениваются своими публичными ключами через открытый эфир, и с помощью высшей математики локально вычисляют общий секрет (Shared Secret), который затем используется для шифрования личного чата.</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">6.3. Аппаратная уязвимость (Hardware Hardening)</h3>
+                    <p>Математику AES-256 взломать невозможно, но злоумышленнику это и не нужно. Он может просто залезть на крышу, физически украсть вашу базовую станцию на солнечной панели и считать прошивку с микроконтроллера напрямую через <span class="tooltip" data-text="Joint Test Action Group. Аппаратный интерфейс для отладки микросхем. Через него можно скачать полный дамп памяти (включая ключи AES), если он не отключен на заводе.">порт JTAG</span>.</p>
+                    <p>Чтобы избежать компрометации всей сети при захвате одного ретранслятора, применяется <strong>Hardware Hardening</strong>:</p>
+                    <ul>
+                        <li><strong>Режим "Router-only":</strong> Выносная мачта настраивается как слепой маршрутизатор. На ней физически стираются приватные ключи шифрования. Она только ретранслирует зашифрованные пакеты, не понимая их содержимого.</li>
+                        <li><strong>Отключение портов:</strong> Программное сжигание (fusing) портов JTAG/SWD, делающее невозможным чтение Flash-памяти.</li>
+                        <li><strong>Компаундирование (Tamper Destruct):</strong> Плата заливается непроницаемой эпоксидной смолой. Попытка добраться до ножек чипа химическими или механическими способами разрушает сам кремниевый кристалл (Anti-Tamper).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: АТАКА НА КАНАЛ И УЗЕЛ ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Оцените эффективность сквозного шифрования при перехвате радиоэфира противником (EVE). Затем попробуйте физически захватить узел.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>РАДИОПЕРЕХВАТ (SIGINT) И АППАРАТНЫЙ ВЗЛОМ (JTAG)</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <button class="btn-sim active-btn" id="btn-aes" onclick="toggleAES()">AES-256: ВКЛЮЧЕН</button>
+                        <button class="btn-sim active-btn" id="btn-hard" onclick="toggleHardening()">HARDENING: ВКЛЮЧЕН</button>
+                        <button class="btn-sim danger" style="margin-left: auto;" onclick="stealNode()">ФИЗИЧЕСКИЙ ЗАХВАТ УЗЛА</button>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="crypto-canvas"></canvas>
+                        <div class="sim-terminal" id="crypto-terminal">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script>
+        const canvasBg = document.getElementById('home-canvas');
+        const ctxBg = canvasBg.getContext('2d');
+        let bgNodes = [];
+        let bgMouse = { x: null, y: null, radius: 150 };
+
+        function resizeBg() { canvasBg.width = window.innerWidth; canvasBg.height = window.innerHeight; initBgNetwork(); }
+        window.addEventListener('mousemove', (e) => { bgMouse.x = e.x; bgMouse.y = e.y; });
+        window.addEventListener('mouseout', () => { bgMouse.x = null; bgMouse.y = null; });
+
+        function initBgNetwork() {
+            bgNodes = [];
+            for (let i = 0; i < Math.floor((canvasBg.width * canvasBg.height) / 20000); i++) {
+                bgNodes.push({ x: Math.random() * canvasBg.width, y: Math.random() * canvasBg.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, pulse: Math.random() * Math.PI * 2 });
+            }
+        }
+
+        function animateBg() {
+            ctxBg.clearRect(0, 0, canvasBg.width, canvasBg.height);
+            ctxBg.lineWidth = 1;
+            for (let i = 0; i < bgNodes.length; i++) {
+                let n1 = bgNodes[i]; n1.pulse += 0.02;
+                if (bgMouse.x != null) {
+                    let dx = bgMouse.x - n1.x; let dy = bgMouse.y - n1.y; let dist = Math.hypot(dx, dy);
+                    if (dist < bgMouse.radius) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(bgMouse.x, bgMouse.y);
+                        ctxBg.strokeStyle = `rgba(178, 67, 56, ${0.8 - dist/bgMouse.radius})`; ctxBg.stroke();
+                        n1.x += dx * 0.005; n1.y += dy * 0.005;
+                    }
+                }
+                n1.x += n1.vx; n1.y += n1.vy;
+                if (n1.x < 0 || n1.x > canvasBg.width) n1.vx *= -1; if (n1.y < 0 || n1.y > canvasBg.height) n1.vy *= -1;
+                for (let j = i + 1; j < bgNodes.length; j++) {
+                    let n2 = bgNodes[j]; let dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+                    if (dist < 150) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(n2.x, n2.y);
+                        ctxBg.strokeStyle = `rgba(75, 73, 64, ${0.3 * (1 - dist/150)})`; ctxBg.stroke();
+                    }
+                }
+                ctxBg.beginPath(); ctxBg.arc(n1.x, n1.y, 2 + Math.sin(n1.pulse), 0, Math.PI*2);
+                ctxBg.fillStyle = '#4b4940'; ctxBg.fill();
+            }
+            requestAnimationFrame(animateBg);
+        }
+        window.addEventListener('resize', resizeBg); resizeBg(); animateBg();
+    </script>
+
+    <script>
+        const cvsC = document.getElementById('crypto-canvas');
+        const ctxC = cvsC.getContext('2d');
+        const termC = document.getElementById('crypto-terminal');
+
+        let cState = {
+            aes: true,
+            hard: true,
+            stolen: false,
+            stealProgress: 0,
+            time: 0
+        };
+
+        let dataStream = [];
+        const plainText = "КООРДИНАТЫ БАЗЫ: 55.7891, 38.4452 | ЗАПРОС ЭВАКУАЦИИ | БАТАРЕЯ 15% ";
+        const hexChars = "0123456789ABCDEF!@#$%^&*";
+
+        function logC(msg, type="log-sys") {
+            termC.innerHTML += `<span class="${type}">${msg}</span>`;
+            termC.scrollTop = termC.scrollHeight;
+        }
+
+        function resizeC() {
+            const rect = cvsC.parentElement.getBoundingClientRect();
+            cvsC.width = rect.width;
+            cvsC.height = rect.height;
+        }
+
+        // Управление кнопками
+        function toggleAES() {
+            cState.aes = !cState.aes;
+            const btn = document.getElementById('btn-aes');
+            if(cState.aes) {
+                btn.className = "btn-sim active-btn";
+                btn.innerText = "AES-256: ВКЛЮЧЕН";
+                logC("[ШИФРАТОР] Активирован алгоритм AES-256 CTR. Эфир защищен.", "log-ok");
+            } else {
+                btn.className = "btn-sim";
+                btn.innerText = "AES-256: ОТКЛЮЧЕН";
+                logC("[ВНИМАНИЕ] Шифрование снято! Данные передаются ОТКРЫТЫМ ТЕКСТОМ (Plaintext).", "log-err");
+            }
+        }
+
+        function toggleHardening() {
+            cState.hard = !cState.hard;
+            const btn = document.getElementById('btn-hard');
+            if(cState.hard) {
+                btn.className = "btn-sim active-btn";
+                btn.innerText = "HARDENING: ВКЛЮЧЕН";
+                logC("[ОБОРУДОВАНИЕ] Порты JTAG сожжены. Плата залита компаундом.", "log-ok");
+            } else {
+                btn.className = "btn-sim";
+                btn.innerText = "HARDENING: ОТКЛЮЧЕН";
+                logC("[ОБОРУДОВАНИЕ] Порт JTAG открыт. Дамп памяти доступен для чтения.", "log-warn");
+            }
+        }
+
+        function stealNode() {
+            if(cState.stolen) return;
+            cState.stolen = true;
+            cState.stealProgress = 0;
+            logC("=============================", "log-sys");
+            logC("[ФИЗИЧЕСКАЯ АТАКА] Вражеская группа захватила ретранслятор на мачте!", "log-err");
+            logC("[ВЗЛОМ] Попытка подключения программатора к чипу nRF52840...", "log-warn");
+            
+            setTimeout(() => {
+                if(cState.hard) {
+                    logC("[ANTI-TAMPER] Обнаружено вмешательство в компаунд!", "log-ok");
+                    logC("[АППАРАТНАЯ ЗАЩИТА] ПРИВАТНЫЙ КЛЮЧ УНИЧТОЖЕН ИЗ ПАМЯТИ.", "log-ok");
+                    logC("[SIGINT EVE] ОШИБКА ЧТЕНИЯ. Получен мусор.", "log-err");
+                    setTimeout(() => { cState.stolen = false; }, 3000);
+                } else {
+                    logC("[УЯЗВИМОСТЬ] Интерфейс JTAG ответил. Чтение дампа памяти...", "log-err");
+                    logC("[ФАТАЛЬНО] PRE-SHARED KEY (AES) СКОМПРОМЕТИРОВАН!", "log-err");
+                    logC("[SIGINT EVE] Ключ применен. Трафик расшифровывается в реальном времени.", "log-err");
+                }
+            }, 2000);
+        }
+
+        function renderC() {
+            ctxC.clearRect(0, 0, cvsC.width, cvsC.height);
+            cState.time++;
+
+            let cx = cvsC.width / 2;
+            let cy = cvsC.height / 2;
+
+            // Координаты
+            let nodeA = { x: cx - 200, y: cy - 100 };
+            let nodeB = { x: cx + 200, y: cy - 100 };
+            let eve = { x: cx, y: cy + 150 };
+
+            // 1. Поток данных (От A к B)
+            ctxC.strokeStyle = '#4b4940'; ctxC.lineWidth = 2;
+            ctxC.beginPath(); ctxC.moveTo(nodeA.x, nodeA.y); ctxC.lineTo(nodeB.x, nodeB.y); ctxC.stroke();
+
+            if (cState.time % 3 === 0) {
+                dataStream.push({ progress: 0, textIndex: Math.floor(Math.random() * plainText.length) });
+            }
+
+            ctxC.font = "bold 16px monospace";
+            for(let i = dataStream.length - 1; i >= 0; i--) {
+                let d = dataStream[i];
+                d.progress += 0.01;
+                if(d.progress >= 1) { dataStream.splice(i, 1); continue; }
+
+                let curX = nodeA.x + (nodeB.x - nodeA.x) * d.progress;
+                let curY = nodeA.y;
+
+                let charToDraw = "";
+                if(cState.aes && (!cState.stolen || cState.hard)) {
+                    // Зашифровано и не взломано
+                    charToDraw = hexChars[Math.floor(Math.random() * hexChars.length)];
+                    ctxC.fillStyle = '#b24338'; // Красный (шифр)
+                } else {
+                    // Открытый текст (или взломано)
+                    charToDraw = plainText[d.textIndex % plainText.length];
+                    ctxC.fillStyle = '#88c0d0'; // Голубой (читаемый текст)
+                }
+                
+                ctxC.fillText(charToDraw, curX, curY - 10);
+            }
+
+            // 2. Узлы (A и B)
+            ctxC.fillStyle = '#b8b19e'; ctxC.fillRect(nodeA.x - 30, nodeA.y - 20, 60, 40);
+            ctxC.fillRect(nodeB.x - 30, nodeB.y - 20, 60, 40);
+            ctxC.fillStyle = '#1a1a17'; ctxC.textAlign = 'center';
+            ctxC.fillText("АЛИСА", nodeA.x, nodeA.y + 5);
+            ctxC.fillText("БОБ", nodeB.x, nodeB.y + 5);
+
+            // 3. Радиоперехват Евы (Снизу)
+            ctxC.beginPath(); ctxC.moveTo(eve.x, eve.y); ctxC.lineTo(nodeA.x + 100, nodeA.y);
+            ctxC.lineTo(nodeB.x - 100, nodeB.y); ctxC.fillStyle = 'rgba(178, 67, 56, 0.1)'; ctxC.fill();
+            
+            ctxC.fillStyle = '#b24338';
+            ctxC.beginPath(); ctxC.arc(eve.x, eve.y, 30, Math.PI, 0); ctxC.fill();
+            ctxC.fillRect(eve.x - 10, eve.y, 20, 40);
+            ctxC.fillStyle = '#cdc8b0'; ctxC.fillText("EVE (SIGINT)", eve.x, eve.y + 60);
+
+            // Экран перехватчика Евы
+            ctxC.fillStyle = '#0a0a0c'; ctxC.fillRect(eve.x - 120, eve.y + 80, 240, 60);
+            ctxC.strokeStyle = '#b24338'; ctxC.strokeRect(eve.x - 120, eve.y + 80, 240, 60);
+            
+            ctxC.font = "12px monospace"; ctxC.fillStyle = '#cdc8b0';
+            ctxC.fillText("[ ПЕРЕХВАТ ЭФИРА ]", eve.x, eve.y + 95);
+            
+            let interceptedText = "";
+            if (cState.aes && (!cState.stolen || cState.hard)) {
+                // Видит шифр
+                for(let k=0; k<15; k++) interceptedText += hexChars[Math.floor(Math.random() * hexChars.length)] + " ";
+                ctxC.fillStyle = '#4b4940';
+            } else {
+                // Видит правду
+                let offset = Math.floor(cState.time * 0.1) % plainText.length;
+                interceptedText = plainText.substring(offset, offset + 20);
+                ctxC.fillStyle = '#a3be8c';
+            }
+            ctxC.fillText(interceptedText, eve.x, eve.y + 120);
+
+            // 4. Физическая атака (Кража)
+            if(cState.stolen) {
+                cState.stealProgress += 0.05;
+                let attackerX = nodeA.x;
+                let attackerY = nodeA.y + 50 + Math.sin(cState.time*0.5)*5;
+
+                // Рука / Хакер у Узла А
+                ctxC.fillStyle = '#b24338';
+                ctxC.fillRect(attackerX - 20, attackerY, 40, 20);
+                ctxC.fillStyle = '#fff'; ctxC.font = '10px monospace';
+                ctxC.fillText("JTAG HACK", attackerX, attackerY + 14);
+
+                // Искры от программатора
+                ctxC.fillStyle = '#ebcb8b';
+                ctxC.fillRect(attackerX + (Math.random()-0.5)*30, attackerY - 15 + (Math.random()-0.5)*10, 3, 3);
+            }
+
+            requestAnimationFrame(renderC);
+        }
+
+        window.addEventListener('load', () => { resizeC(); renderC(); });
+        window.addEventListener('resize', resizeC);
+    </script>
+</body>
+</html>

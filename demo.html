@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕРМИНАЛ СИМУЛЯЦИИ // АРХИВ МСР</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 100px 2vw 20px 2vw;
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent-red);
+            padding-bottom: 10px;
+            pointer-events: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .chapter-title {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--accent-red);
+            line-height: 1;
+            letter-spacing: -2px;
+            text-shadow: 2px 2px 0 rgba(178, 67, 56, 0.3);
+        }
+
+        /* ИНТЕРФЕЙС ТЕРМИНАЛА */
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 20px;
+            flex-grow: 1;
+            pointer-events: auto;
+            min-height: 0; /* Для правильного скролла */
+        }
+
+        /* Левая панель: Управление и Логи */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            padding: 15px;
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.2);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-action {
+            background: transparent;
+            color: var(--terminal-text);
+            border: 1px solid #4b4940;
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-action:hover { background: var(--text-main); color: var(--bg-base); }
+        .btn-action.primary { border-color: #88c0d0; color: #88c0d0; }
+        .btn-action.primary:hover { background: #88c0d0; color: #1a1a17; }
+        .btn-action.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-action.danger:hover { background: var(--accent-red); color: #fff; }
+        .btn-action.warn { border-color: #ebcb8b; color: #ebcb8b; }
+        .btn-action.warn:hover { background: #ebcb8b; color: #1a1a17; }
+
+        .terminal-window {
+            flex-grow: 1;
+            background: #050505;
+            border: 2px inset #333;
+            padding: 15px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #a8a38f;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .terminal-window::-webkit-scrollbar { width: 4px; }
+        .terminal-window::-webkit-scrollbar-thumb { background: #4b4940; }
+
+        .log-time { color: #555; margin-right: 8px; }
+        .log-sys { color: #88c0d0; }
+        .log-tx { color: #ebcb8b; font-weight: bold; }
+        .log-rx { color: #a3be8c; }
+        .log-err { color: var(--accent-red); font-weight: bold; text-shadow: 0 0 5px rgba(178, 67, 56, 0.5);}
+        .log-crypto { color: #b48ead; font-style: italic; }
+
+        /* Правая панель: Радар (Canvas) */
+        .radar-panel {
+            background: radial-gradient(circle at center, #1a1a1c 0%, #050505 100%);
+            border: 4px solid var(--accent-red);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9), 10px 10px 0 rgba(178, 67, 56, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .radar-overlay {
+            position: absolute;
+            top: 10px; left: 15px;
+            color: var(--accent-red);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #radar-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 1200px) {
+            .chapter-container { height: auto; overflow: visible; }
+            .demo-layout { grid-template-columns: 1fr; height: auto; }
+            .radar-panel { height: 600px; }
+            .terminal-window { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter5.html">ГЛ_05</a>
+            <a href="chapter8.html">ГЛ_08</a>
+            <a href="demo.html" class="active danger-link">СИМУЛЯЦИЯ</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <h1 class="chapter-title">Командный Терминал</h1>
+            <span class="system-tag" style="background: var(--accent-red); color: #fff;">[ ПРИЛОЖЕНИЕ_Д ]</span>
+        </div>
+
+        <div class="demo-layout">
+            <div class="control-panel">
+                <div style="color: var(--text-main); font-family: var(--font-mono); font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #4b4940; padding-bottom: 5px;">
+                    ИНТЕРФЕЙС УПРАВЛЕНИЯ СЕТЬЮ
+                </div>
+                
+                <div class="btn-grid">
+                    <button class="btn-action primary" onclick="sendBroadcast()" style="grid-column: 1 / -1;">1. BROADCAST (ОБЩИЙ КАНАЛ)</button>
+                    <button class="btn-action" onclick="sendDirectMessage()">2. DIRECT MSG (МАРШРУТ)</button>
+                    <button class="btn-action" onclick="toggleEncryption()">3. TOGGLE AES-256</button>
+                    <button class="btn-action warn" onclick="simulateJamming()">4. АТАКА РЭБ (JAMMING)</button>
+                    <button class="btn-action danger" onclick="killRandomNode()">5. УНИЧТОЖИТЬ УЗЕЛ (SPOF)</button>
+                    <button class="btn-action" onclick="rebootSystem()" style="grid-column: 1 / -1;">0. ПЕРЕЗАГРУЗКА ТОПОЛОГИИ</button>
+                </div>
+
+                <div class="terminal-window" id="cli-terminal">
+                    </div>
+            </div>
+
+            <div class="radar-panel">
+                <div class="radar-overlay">
+                    <div>LORA MESH TOPOLOGY // 868.0 MHz</div>
+                    <div id="radar-status" style="color: #a3be8c; font-size: 0.9rem; margin-top: 5px;">STATUS: OPTIMAL</div>
+                    <div id="radar-snr" style="color: #a3be8c; font-size: 0.9rem;">AVG SNR: +5 dB</div>
+                </div>
+                <canvas id="radar-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cvs = document.getElementById('radar-canvas');
+        const ctx = cvs.getContext('2d');
+        const term = document.getElementById('cli-terminal');
+        const statusUI = document.getElementById('radar-status');
+        const snrUI = document.getElementById('radar-snr');
+
+        let nodes = [];
+        let packets = [];
+        let rings = [];
+        let time = 0;
+        let myNode = null;
+
+        let simState = {
+            jamming: false,
+            aesEnabled: true,
+            packetCounter: 4096
+        };
+
+        // Утилиты
+        function resizeCvs() {
+            const rect = cvs.parentElement.getBoundingClientRect();
+            cvs.width = rect.width;
+            cvs.height = rect.height;
+        }
+
+        function padZero(num) { return num < 10 ? '0'+num : num; }
+        function getLogTime() {
+            const d = new Date();
+            return `${padZero(d.getHours())}:${padZero(d.getMinutes())}:${padZero(d.getSeconds())}.${Math.floor(d.getMilliseconds()/100)}`;
+        }
+
+        function log(msg, type="log-sys") {
+            const span = document.createElement('span');
+            span.innerHTML = `<span class="log-time">[${getLogTime()}]</span><span class="${type}">${msg}</span>`;
+            term.appendChild(span);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Инициализация сети
+        function initNetwork() {
+            nodes = [];
+            packets = [];
+            rings = [];
+            simState.jamming = false;
+            statusUI.innerText = "STATUS: OPTIMAL"; statusUI.style.color = "#a3be8c";
+            snrUI.innerText = "AVG SNR: +5 dB"; snrUI.style.color = "#a3be8c";
+
+            const numNodes = 25;
+            for(let i=0; i<numNodes; i++) {
+                nodes.push({
+                    id: 100 + i,
+                    name: `Node_${i.toString(16).toUpperCase()}`,
+                    x: Math.random() * (cvs.width - 100) + 50,
+                    y: Math.random() * (cvs.height - 100) + 50,
+                    alive: true,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Назначаем наш "Командный узел" (Всегда внизу по центру)
+            myNode = nodes[0];
+            myNode.x = cvs.width / 2;
+            myNode.y = cvs.height - 80;
+            myNode.name = "CMD_CENTER";
+
+            // Вычисление соседей
+            updateNeighbors();
+        }
+
+        function updateNeighbors() {
+            const radius = 180;
+            nodes.forEach(n1 => {
+                n1.neighbors = [];
+                if(!n1.alive) return;
+                nodes.forEach(n2 => {
+                    if(n1.id !== n2.id && n2.alive) {
+                        if(Math.hypot(n1.x - n2.x, n1.y - n2.y) < radius) {
+                            n1.neighbors.push(n2);
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- ДЕЙСТВИЯ (КНОПКИ) ---
+
+        function rebootSystem() {
+            term.innerHTML = '';
+            log("Инициализация радиомодуля SX1262...", "log-sys");
+            log("Загрузка Mesh-топологии. Поиск пиров...", "log-sys");
+            initNetwork();
+            log(`Обнаружено ${nodes.length-1} активных узлов в радиусе доступа.`, "log-ok");
+            log("AES-256 PSK загружен. Система готова к работе.", "log-crypto");
+        }
+
+        function toggleEncryption() {
+            simState.aesEnabled = !simState.aesEnabled;
+            if(simState.aesEnabled) {
+                log("[КРИПТО] Включено сквозное шифрование AES-256 CTR.", "log-crypto");
+            } else {
+                log("[ВНИМАНИЕ] Шифрование отключено! Передача в открытом виде.", "log-err");
+            }
+        }
+
+        function sendBroadcast() {
+            if(simState.jamming) {
+                log("[TX ОШИБКА] Канал занят. Ожидание свободного эфира (CSMA/CA)...", "log-err");
+                return;
+            }
+
+            simState.packetCounter++;
+            const pId = simState.packetCounter.toString(16).toUpperCase();
+            
+            log(`[TX] Broadcast-рассылка. Packet ID: 0x${pId} | HopLimit: 3`, "log-tx");
+            if(simState.aesEnabled) {
+                log(`> Payload Encrypted: [ ${Array(8).fill(0).map(()=>Math.random().toString(16)[3]).join('')}... ]`, "log-crypto");
+            } else {
+                log(`> Payload Plaintext: "Всем узлам, статус нормальный."`, "log-sys");
+            }
+
+            // Запускаем флудинг от myNode
+            triggerFlood(myNode, 3);
+        }
+
+        function triggerFlood(startNode, hops) {
+            rings.push({ x: startNode.x, y: startNode.y, r: 0, color: '#88c0d0' });
+            
+            startNode.neighbors.forEach(target => {
+                packets.push({
+                    x: startNode.x, y: startNode.y,
+                    tx: target.x, ty: target.y,
+                    progress: 0, speed: 0.02,
+                    hopsLeft: hops - 1,
+                    targetNode: target
+                });
+            });
+        }
+
+        // Алгоритм поиска пути (Dijkstra) для Direct Message
+        function findPath(start, target) {
+            let distances = {}; let prev = {}; let queue = [];
+            nodes.forEach(n => { distances[n.id] = Infinity; queue.push(n); });
+            distances[start.id] = 0;
+
+            while(queue.length > 0) {
+                queue.sort((a,b) => distances[a.id] - distances[b.id]);
+                let curr = queue.shift();
+                if(curr.id === target.id) break;
+                if(distances[curr.id] === Infinity) break;
+
+                curr.neighbors.forEach(neighbor => {
+                    let alt = distances[curr.id] + 1;
+                    if(alt < distances[neighbor.id]) {
+                        distances[neighbor.id] = alt;
+                        prev[neighbor.id] = curr;
+                    }
+                });
+            }
+
+            let path = []; let u = target;
+            if(prev[u.id] || u.id === start.id) {
+                while(u) { path.unshift(u); u = prev[u.id]; }
+            }
+            return path;
+        }
+
+        function sendDirectMessage() {
+            if(simState.jamming) {
+                log("[TX ОШИБКА] Модем не может пробиться через шум РЭБ.", "log-err");
+                return;
+            }
+
+            // Выбираем случайную живую ноду подальше
+            let aliveNodes = nodes.filter(n => n.alive && n.id !== myNode.id);
+            if(aliveNodes.length === 0) { log("[ОШИБКА] Нет доступных узлов.", "log-err"); return; }
+            
+            let target = aliveNodes[Math.floor(Math.random() * aliveNodes.length)];
+            let path = findPath(myNode, target);
+
+            if(path.length < 2) {
+                log(`[МАРШРУТ] Нет пути до узла ${target.name}. Слишком далеко.`, "log-err");
+                return;
+            }
+
+            log(`[МАРШРУТ] Построение трассы до ${target.name}... Прыжков: ${path.length-1}`, "log-sys");
+            log(`[ECDH] Согласование ключей Curve25519 с ${target.name}... Успешно.`, "log-crypto");
+            log(`[TX] Отправка Direct Message...`, "log-tx");
+
+            // Анимация маршрута (последовательная передача)
+            sendAlongPath(path, 0);
+        }
+
+        function sendAlongPath(path, currentIndex) {
+            if(currentIndex >= path.length - 1) {
+                log(`[RX ACK] Подтверждение доставки от ${path[path.length-1].name} получено.`, "log-ok");
+                rings.push({ x: path[path.length-1].x, y: path[path.length-1].y, r: 0, color: '#a3be8c' });
+                return;
+            }
+
+            let current = path[currentIndex];
+            let next = path[currentIndex + 1];
+
+            rings.push({ x: current.x, y: current.y, r: 0, color: '#ebcb8b' });
+            
+            packets.push({
+                x: current.x, y: current.y,
+                tx: next.x, ty: next.y,
+                progress: 0, speed: 0.03,
+                isDirect: true,
+                onComplete: () => {
+                    log(`> Ретрансляция через ${next.name}...`, "log-sys");
+                    sendAlongPath(path, currentIndex + 1);
+                }
+            });
+        }
+
+        function killRandomNode() {
+            let aliveNodes = nodes.filter(n => n.alive && n.id !== myNode.id);
+            if(aliveNodes.length === 0) return;
+            
+            // Выбираем центральный узел для наглядности разрыва сети
+            let target = aliveNodes.reduce((center, n) => {
+                let distToCenter = Math.hypot(n.x - cvs.width/2, n.y - cvs.height/2);
+                let centerDist = Math.hypot(center.x - cvs.width/2, center.y - cvs.height/2);
+                return distToCenter < centerDist ? n : center;
+            });
+
+            target.alive = false;
+            updateNeighbors(); // Пересчет топологии
+
+            // Искры
+            for(let i=0; i<20; i++) {
+                packets.push({ x: target.x, y: target.y, tx: target.x+(Math.random()-0.5)*100, ty: target.y+(Math.random()-0.5)*100, progress:0, speed: 0.05, isSpark: true });
+            }
+
+            log(`[SPOF АВАРИЯ] Узел ${target.name} обесточен/уничтожен!`, "log-err");
+            log(`[MESH] Потерян пир. Запуск протокола самовосстановления (Self-Healing)...`, "log-warn");
+            
+            setTimeout(() => {
+                log(`[MESH] Маршруты перестроены в обход ${target.name}.`, "log-ok");
+            }, 1500);
+        }
+
+        function simulateJamming() {
+            simState.jamming = !simState.jamming;
+            if(simState.jamming) {
+                statusUI.innerText = "STATUS: DANGER / JAMMING"; statusUI.style.color = "var(--accent-red)";
+                snrUI.innerText = "AVG SNR: -25 dB (BELOW LIMIT)"; snrUI.style.color = "var(--accent-red)";
+                log("===============================", "log-err");
+                log("[ВНИМАНИЕ] ЗАФИКСИРОВАНА ШИРОКОПОЛОСНАЯ ПОМЕХА (РЭБ)!", "log-err");
+                log("[РАДИО] Отношение Сигнал/Шум упало ниже предела демодуляции.", "log-err");
+                log("[СИСТЕМА] Эфир парализован. Пакеты уничтожаются.", "log-err");
+            } else {
+                statusUI.innerText = "STATUS: OPTIMAL"; statusUI.style.color = "#a3be8c";
+                snrUI.innerText = "AVG SNR: +2 dB"; snrUI.style.color = "#a3be8c";
+                log("===============================", "log-sys");
+                log("[ИНФО] Источник помех отключен. Эфир очистился.", "log-ok");
+                log("[MESH] Восстановление синхронизации узлов...", "log-sys");
+            }
+        }
+
+        // --- ГЛАВНЫЙ ЦИКЛ ОТРИСОВКИ ---
+        function render() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            time++;
+
+            // Эффект РЭБ (Красный шум на фоне)
+            if(simState.jamming) {
+                ctx.fillStyle = 'rgba(178, 67, 56, 0.15)';
+                ctx.fillRect(0,0, cvs.width, cvs.height);
+                for(let i=0; i<100; i++) {
+                    ctx.fillStyle = Math.random() > 0.5 ? '#b24338' : '#1a1a17';
+                    ctx.fillRect(Math.random()*cvs.width, Math.random()*cvs.height, 3, 3);
+                }
+            }
+
+            // Сетка радара
+            ctx.strokeStyle = 'rgba(136, 192, 208, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(myNode.x, myNode.y, 180, Math.PI, 0); ctx.stroke();
+            ctx.beginPath(); ctx.arc(myNode.x, myNode.y, 360, Math.PI, 0); ctx.stroke();
+
+            // Линии связей
+            ctx.lineWidth = 1.5;
+            nodes.forEach(n1 => {
+                if(!n1.alive || simState.jamming) return; // Если РЭБ - связей нет
+                n1.neighbors.forEach(n2 => {
+                    if(n1.id < n2.id) { // Чтобы не рисовать дважды
+                        ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y);
+                        let dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+                        ctx.strokeStyle = `rgba(136, 192, 208, ${0.4 * (1 - dist/180)})`;
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            // Кольца флудинга
+            for(let i = rings.length - 1; i >= 0; i--) {
+                let r = rings[i];
+                r.r += simState.jamming ? 1 : 4; 
+                ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI*2);
+                ctx.strokeStyle = r.color;
+                ctx.globalAlpha = Math.max(0, 1 - r.r/150);
+                ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1.0;
+                
+                if(r.r > 150) rings.splice(i, 1);
+            }
+
+            // Пакеты (Точки)
+            for(let i = packets.length - 1; i >= 0; i--) {
+                let p = packets[i];
+                p.progress += p.speed;
+
+                if(simState.jamming && !p.isSpark) {
+                    // Пакеты сгорают в шуме РЭБ
+                    ctx.fillStyle = '#b24338'; ctx.fillRect(p.x + (p.tx-p.x)*p.progress, p.y + (p.ty-p.y)*p.progress, 4, 4);
+                    if(Math.random() < 0.1) packets.splice(i, 1);
+                    continue;
+                }
+
+                if(p.progress >= 1) {
+                    if(p.isDirect && p.onComplete) {
+                        p.onComplete();
+                    } else if (!p.isDirect && p.hopsLeft > 0 && p.targetNode && p.targetNode.alive) {
+                        // Ретрансляция флуда
+                        rings.push({ x: p.targetNode.x, y: p.targetNode.y, r: 0, color: '#ebcb8b' });
+                        p.targetNode.neighbors.forEach(nn => {
+                            packets.push({ x: p.targetNode.x, y: p.targetNode.y, tx: nn.x, ty: nn.y, progress: 0, speed: 0.02, hopsLeft: p.hopsLeft - 1, targetNode: nn });
+                        });
+                    }
+                    packets.splice(i, 1);
+                } else {
+                    let cx = p.x + (p.tx - p.x) * p.progress;
+                    let cy = p.y + (p.ty - p.y) * p.progress;
+                    ctx.beginPath(); ctx.arc(cx, cy, p.isSpark ? 2 : 4, 0, Math.PI*2);
+                    ctx.fillStyle = p.isSpark ? '#b24338' : (p.isDirect ? '#ebcb8b' : '#88c0d0');
+                    ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fill(); ctx.shadowBlur = 0;
+                }
+            }
+
+            // Отрисовка Узлов
+            nodes.forEach(n => {
+                n.pulse += 0.05;
+                ctx.beginPath();
+                
+                if(n.id === myNode.id) {
+                    ctx.rect(n.x - 8, n.y - 8, 16, 16);
+                } else {
+                    ctx.arc(n.x, n.y, 5, 0, Math.PI*2);
+                }
+
+                if(!n.alive) {
+                    ctx.fillStyle = '#4b4940'; // Мертв
+                } else if(simState.jamming) {
+                    ctx.fillStyle = '#b24338'; // Подавлен РЭБ
+                } else if(n.id === myNode.id) {
+                    ctx.fillStyle = '#88c0d0'; // Я
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#88c0d0';
+                } else {
+                    ctx.fillStyle = '#cdc8b0'; // Обычный узел
+                    ctx.shadowBlur = 5; ctx.shadowColor = '#cdc8b0';
+                }
+
+                ctx.fill(); ctx.shadowBlur = 0;
+
+                // Пульс живых
+                if(n.alive && !simState.jamming && Math.sin(n.pulse + n.id) > 0.95) {
+                    ctx.beginPath(); ctx.arc(n.x, n.y, 10, 0, Math.PI*2);
+                    ctx.strokeStyle = n.id === myNode.id ? 'rgba(136, 192, 208, 0.8)' : 'rgba(205, 200, 176, 0.5)';
+                    ctx.stroke();
+                }
+
+                // Имя
+                if(n.id === myNode.id) {
+                    ctx.fillStyle = '#88c0d0'; ctx.font = 'bold 12px monospace'; ctx.fillText(n.name, n.x - 30, n.y + 20);
+                } else if (n.alive && !simState.jamming) {
+                    ctx.fillStyle = '#4b4940'; ctx.font = '10px monospace'; ctx.fillText(n.name.split('_')[1], n.x + 8, n.y + 3);
+                }
+            });
+
+            requestAnimationFrame(render);
+        }
+
+        window.addEventListener('load', () => { 
+            resizeCvs(); 
+            rebootSystem(); 
+            render(); 
+        });
+        window.addEventListener('resize', () => {
+            resizeCvs();
+            initNetwork();
+        });
+    </script>
+</body>
+</html>

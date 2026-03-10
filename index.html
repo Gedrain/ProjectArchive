@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АРХИВ // МСР-24.01</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo">
+            <span class="blinking-cursor">■</span> АРХИВ
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="active">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="#chapters">ГЛАВЫ I-VIII</a>
+            <a href="conclusion.html">ЗАКЛЮЧЕНИЕ</a>
+            <a href="demo.html" class="danger-link">СИМУЛЯЦИЯ</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <span class="system-tag">[ ПРОЕКТ ]</span>
+            <h1 class="glitch-title" data-text="Децентрализация Систем Сети">
+                Децентрализация<br>Систем Сети
+            </h1>
+            <p class="hero-subtitle">
+                Фундаментальный анализ уязвимостей глобальных коммуникаций и конструирование независимой инфраструктуры на базе физики LoRa и топологии Mesh. Полный отказ от корпоративной зависимости.
+            </p>
+            <div class="author-tag">
+                <span class="highlight-red">[UNIT]</span> ИВАНОВ-ЛАПИН НИКОЛАЙ // ГРУППА МСР 24.01
+            </div>
+        </div>
+    </div>
+
+    <section class="index-section" id="chapters">
+        <div class="section-header">
+            <h2>[ БАЗА_ДАННЫХ ]</h2>
+            <div class="line"></div>
+        </div>
+
+        <div class="chapter-grid">
+            
+            <a href="intro.html" class="chapter-card special-card">
+                <span class="card-num">INT</span>
+                <h3>Введение</h3>
+                <p>Формулировка проблемы, актуальность проекта, постановка исследовательских целей и гипотеза достижения информационной независимости.</p>
+                <div class="card-status">ОТКРЫТЬ ДОКУМЕНТ</div>
+            </a>
+
+            <a href="chapter1.html" class="chapter-card">
+                <span class="card-num">01</span>
+                <h3>Анатомия Зависимости</h3>
+                <p>Анализ хрупкости клиент-серверной архитектуры, BGP-маршрутизации и проблемы "единой точки отказа" (SPOF) в современных реалиях.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter2.html" class="chapter-card">
+                <span class="card-num">02</span>
+                <h3>Иллюзия Спутников</h3>
+                <p>Разбор систем Starlink и Iridium. Биллинговая уязвимость, геофенсинг и пеленгация терминалов комплексами РЭБ (эффект светового маяка).</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter3.html" class="chapter-card">
+                <span class="card-num">03</span>
+                <h3>Тактическая Связь</h3>
+                <p>Физические пределы трансиверов VHF/UHF. Формулы затухания, радиогоризонт и уязвимость открытых стандартов (DMR) перед TDOA.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter4.html" class="chapter-card">
+                <span class="card-num">04</span>
+                <h3>Парадигма LoRa & Mesh</h3>
+                <p>Физика линейно-частотной модуляции (CSS). Извлечение сигнала из-под уровня шума при SNR -20 дБ. Децентрализованная маршрутизация.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter5.html" class="chapter-card">
+                <span class="card-num">05</span>
+                <h3>Комплекс Meshtastic</h3>
+                <p>Алгоритмы направленного флудинга (Flooding routing), контроль эфирного времени (Airtime) и легальность работы в ISM-диапазонах.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter6.html" class="chapter-card">
+                <span class="card-num">06</span>
+                <h3>Криптография</h3>
+                <p>Сквозное шифрование (AES-256 CTR), асимметричный обмен ключами (Curve25519) и аппаратная защита узлов от компрометации (Hardening).</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter7.html" class="chapter-card">
+                <span class="card-num">07</span>
+                <h3>Гибридный Интранет</h3>
+                <p>Мосты (Gateways) между автономной Mesh-сетью и LAN. Интеграция микрокомпьютеров Raspberry Pi и протокола федерации Matrix.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="chapter8.html" class="chapter-card">
+                <span class="card-num">08</span>
+                <h3>Аппаратный Узел</h3>
+                <p>Инженерия автономной Ноды. Микроконтроллеры (nRF52840), трансиверы SX1262, LiFePO4 аккумуляторы и расчет MPPT для солнечных панелей.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="conclusion.html" class="chapter-card special-card">
+                <span class="card-num">END</span>
+                <h3>Заключение</h3>
+                <p>Финальное резюме по аппаратной независимости, доказательство выдвинутой гипотезы и векторы дальнейшего масштабирования сети.</p>
+                <div class="card-status">ОТКРЫТЬ ДОКУМЕНТ</div>
+            </a>
+
+            <a href="glossary.html" class="chapter-card special-card">
+                <span class="card-num">GLS</span>
+                <h3>Словарь Терминов</h3>
+                <p>Расшифровка узкоспециализированных аббревиатур: AES, BMS, CSS, DPI, Duty Cycle, SNR, SPOF, TCXO и других протоколов.</p>
+                <div class="card-status">ОТКРЫТЬ СПРАВОЧНИК</div>
+            </a>
+
+            <a href="bibliography.html" class="chapter-card special-card">
+                <span class="card-num">REF</span>
+                <h3>Список Литературы</h3>
+                <p>Официальные спецификации компонентов (Datasheets), стандарты информационной безопасности (NIST) и труды по радиофизике.</p>
+                <div class="card-status">ОТКРЫТЬ АРХИВ</div>
+            </a>
+
+            <a href="appendices.html" class="chapter-card">
+                <span class="card-num">APP</span>
+                <h3>Приложения & Схемы</h3>
+                <p>Таблицы сравнения, спектрограммы, расчет бюджета канала (Link Budget), электрические принципиальные схемы (BOM) и фото прототипа.</p>
+                <div class="card-status">ДАННЫЕ ДОСТУПНЫ</div>
+            </a>
+
+            <a href="demo.html" class="chapter-card danger-card">
+                <span class="card-num">99</span>
+                <h3>Интерактивный Терминал</h3>
+                <p>Приложение Д: Запуск полномасштабной симуляции Mesh-сети. Эмуляция атак РЭБ, уничтожения узлов и проверка Self-Healing алгоритмов.</p>
+                <div class="card-status danger-text">ТРЕБУЕТСЯ ЗАПУСК</div>
+            </a>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ИНДЕКСА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

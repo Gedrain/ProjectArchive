@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЗАКЛЮЧЕНИЕ // АРХИВ МСР</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+        .text-block li { margin-bottom: 10px; }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+            box-shadow: 15px 15px 0 rgba(178, 67, 56, 0.2);
+        }
+        
+        .quote-block::before {
+            content: 'FINAL_STATEMENT';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        .quote-block .tooltip { color: var(--bg-alt); border-bottom-color: var(--bg-alt); }
+        .quote-block .tooltip:hover { background: var(--bg-alt); color: var(--text-main); }
+
+        /* ФИНАЛЬНАЯ СИМУЛЯЦИЯ */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 15px;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+            justify-content: center;
+        }
+
+        .btn-sim {
+            background: transparent; color: var(--bg-base);
+            border: 2px solid var(--bg-base); padding: 12px 30px;
+            font-family: var(--font-mono); font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s; text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--bg-base); color: var(--text-main); }
+        
+        .btn-sim.sync { border-color: #88c0d0; color: #88c0d0; }
+        .btn-sim.sync:hover { background: #88c0d0; color: #1a1a17; }
+
+        .btn-sim.archive { border-color: #a3be8c; color: #a3be8c; }
+        .btn-sim.archive:hover { background: #a3be8c; color: #1a1a17; box-shadow: 0 0 15px #a3be8c;}
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100% - 130px);
+        }
+
+        #end-canvas {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1c 0%, #0a0a0c 100%);
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px; font-family: var(--font-mono); font-size: 1rem;
+            color: #a8a38f; overflow-y: auto; background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 8px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; }
+        .log-sys { color: #88c0d0; }
+        .log-ok { color: #a3be8c; font-weight: bold; text-shadow: 0 0 5px rgba(163,190,140,0.5); }
+        .log-warn { color: #ebcb8b; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter5.html">ГЛ_05</a>
+            <a href="chapter8.html">ГЛ_08</a>
+            <a href="conclusion.html" class="active">ЗАКЛЮЧЕНИЕ</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_END ]</span>
+            <h1 class="chapter-title">Итоги исследования</h1>
+        </div>
+
+        <div class="quote-block">
+            Децентрализация — это не просто отказ от удобств коммерческого интернета. Это осознанный выбор в пользу <span class="tooltip" data-text="Способность человека или организации полностью контролировать свою информационную инфраструктуру, оборудование и криптографические ключи без участия третьих лиц.">технологического суверенитета</span>. Проведенное исследование доказывает, что создание собственной, неуязвимой инфраструктуры связи — это решаемая инженерная задача, доступная каждому.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>1. Гипотеза Подтверждена</h3>
+                    <p>Выдвинутая во введении гипотеза полностью подтвердилась на практике. Использование проприетарных спутниковых терминалов или классических раций не дает истинной независимости из-за биллинговых ограничений, геофенсинга и уязвимости перед пеленгацией.</p>
+                    <p>Однако симбиоз модуляции <strong>LoRa</strong>, алгоритмов ячеистой маршрутизации <strong>(Mesh)</strong> и протокола <strong>Meshtastic</strong> позволяет развернуть масштабируемую сеть, не зависящую от магистральных интернет-провайдеров и энергосистем города.</p>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>2. Уничтожение SPOF</h3>
+                    <p>Архитектурный анализ показал, что мы успешно устранили <span class="tooltip" data-text="Single Point of Failure. Базовые станции сотовой связи или магистральные DNS серверы.">«Единую точку отказа»</span>. </p>
+                    <p>Спроектированный аппаратный узел (nRF52840 + SX1262 + LiFePO4 + MPPT) способен пережить отключение глобального электропитания, продолжая маршрутизировать зашифрованный (AES-256) трафик исключительно за счет солнечной энергии. Выход из строя одного или нескольких таких узлов не обрушит сеть благодаря протоколу динамического флудинга.</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">3. Векторы Масштабирования</h3>
+                    <p>Данный проект не является финальной точкой, а служит фундаментом для дальнейшего развертывания <span class="tooltip" data-text="Способность сети увеличивать покрытие и пропускную способность за счет простого добавления новых узлов без изменения центральной архитектуры.">масштабируемой</span> суверенной инфраструктуры.</p>
+                    <p><strong>Будущие направления развития:</strong></p>
+                    <ul>
+                        <li>Интеграция телеметрии автономных узлов с системами <span class="tooltip" data-text="Internet of Things. Интернет вещей. Например, подключение датчиков радиации или метеостанций к сети LoRa для передачи данных в Home Assistant.">IoT</span> (Умного дома) через протокол MQTT.</li>
+                        <li>Создание глобальных мостов (Gateways) на базе Raspberry Pi для объединения изолированных городских Mesh-сетей в единый децентрализованный Интранет через протокол <strong>Matrix</strong>.</li>
+                        <li>Разработка кастомных направленных антенн (Яги/Волновые каналы) для установления сверхдальних линков связи (100+ километров) между городами.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИСТЕМА: СТАТУС ПРОЕКТА ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Финализация. Инициируйте глобальный Mesh, чтобы объединить узлы, а затем запустите процесс архивирования данных для сохранения результатов исследования.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>ГЛОБАЛЬНАЯ СИНХРОНИЗАЦИЯ И ЗАПИСЬ ДАННЫХ В АРХИВ</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <button class="btn-sim sync" onclick="startSync()">1. ИНИЦИИРОВАТЬ ГЛОБАЛЬНЫЙ MESH</button>
+                        <button class="btn-sim archive" id="btn-archive" onclick="startArchive()" disabled style="opacity: 0.3; cursor: not-allowed;">2. АРХИВИРОВАТЬ ПРОЕКТ</button>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="end-canvas"></canvas>
+                        <div class="sim-terminal" id="end-terminal">
+                            <span class="log-warn">[СИСТЕМА] Разрозненные узлы ожидают синхронизации.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ФАЙЛА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const cvsEnd = document.getElementById('end-canvas');
+        const ctxEnd = cvsEnd.getContext('2d');
+        const termEnd = document.getElementById('end-terminal');
+
+        let endState = {
+            synced: false,
+            archiving: false,
+            archiveX: 0,
+            time: 0
+        };
+
+        let endNodes = [];
+
+        function logEnd(msg, type="log-sys") {
+            termEnd.innerHTML += `<span class="${type}">${msg}</span>`;
+            termEnd.scrollTop = termEnd.scrollHeight;
+        }
+
+        function resizeEnd() {
+            const rect = cvsEnd.parentElement.getBoundingClientRect();
+            cvsEnd.width = rect.width;
+            cvsEnd.height = rect.height;
+            initEndNodes();
+        }
+
+        function initEndNodes() {
+            endNodes = [];
+            for(let i=0; i<50; i++) {
+                endNodes.push({
+                    x: Math.random() * cvsEnd.width,
+                    y: Math.random() * cvsEnd.height,
+                    vx: (Math.random()-0.5)*0.5,
+                    vy: (Math.random()-0.5)*0.5,
+                    synced: false,
+                    archived: false,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+            endState.synced = false;
+            endState.archiving = false;
+            endState.archiveX = 0;
+        }
+
+        function startSync() {
+            if(endState.synced) return;
+            endState.synced = true;
+            logEnd("==========================", "log-sys");
+            logEnd("[MESH] Поиск пиров и рукопожатие AES-256...", "log-sys");
+            logEnd("[MESH] Маршруты построены. Топология стабилизирована.", "log-ok");
+            
+            // Активация узлов
+            endNodes.forEach(n => n.synced = true);
+
+            // Разблокировка кнопки архивации
+            const btnArc = document.getElementById('btn-archive');
+            btnArc.disabled = false;
+            btnArc.style.opacity = 1;
+            btnArc.style.cursor = 'pointer';
+        }
+
+        function startArchive() {
+            if(endState.archiving) return;
+            endState.archiving = true;
+            endState.archiveX = 0;
+            logEnd("==========================", "log-warn");
+            logEnd("[СИСТЕМА] Инициация лазерного сканирования БД.", "log-warn");
+            logEnd("[ЗАПИСЬ] Сохранение топологии в защищенный кластер...", "log-sys");
+        }
+
+        function renderEnd() {
+            ctxEnd.clearRect(0, 0, cvsEnd.width, cvsEnd.height);
+            endState.time++;
+
+            // Логика лазерного сканера (Архивация)
+            if(endState.archiving) {
+                endState.archiveX += 8; // Скорость сканера
+                
+                // Лазерный луч
+                ctxEnd.beginPath();
+                ctxEnd.moveTo(endState.archiveX, 0);
+                ctxEnd.lineTo(endState.archiveX, cvsEnd.height);
+                ctxEnd.strokeStyle = '#a3be8c';
+                ctxEnd.lineWidth = 4;
+                ctxEnd.shadowBlur = 20;
+                ctxEnd.shadowColor = '#a3be8c';
+                ctxEnd.stroke();
+                ctxEnd.shadowBlur = 0;
+
+                // Заливка уже отсканированной зоны
+                ctxEnd.fillStyle = 'rgba(163, 190, 140, 0.05)';
+                ctxEnd.fillRect(0, 0, endState.archiveX, cvsEnd.height);
+
+                if(endState.archiveX > cvsEnd.width + 100) {
+                    endState.archiving = false;
+                    logEnd("[УСПЕШНО] Данные записаны. Проект завершен.", "log-ok");
+                    logEnd("[СИСТЕМА] Слава Великому Мне.", "log-sys");
+                }
+            }
+
+            // Отрисовка связей (Синхронизация)
+            if(endState.synced) {
+                ctxEnd.lineWidth = 1;
+                for(let i=0; i<endNodes.length; i++) {
+                    for(let j=i+1; j<endNodes.length; j++) {
+                        let d = Math.hypot(endNodes[i].x - endNodes[j].x, endNodes[i].y - endNodes[j].y);
+                        if(d < 120) {
+                            ctxEnd.beginPath();
+                            ctxEnd.moveTo(endNodes[i].x, endNodes[i].y);
+                            ctxEnd.lineTo(endNodes[j].x, endNodes[j].y);
+                            
+                            // Если оба узла заархивированы - линия зеленая, иначе голубая
+                            if(endNodes[i].archived && endNodes[j].archived) {
+                                ctxEnd.strokeStyle = `rgba(163, 190, 140, ${1 - d/120})`;
+                            } else {
+                                ctxEnd.strokeStyle = `rgba(136, 192, 208, ${(1 - d/120) * 0.5})`;
+                            }
+                            ctxEnd.stroke();
+                        }
+                    }
+                }
+            }
+
+            // Отрисовка Узлов
+            endNodes.forEach(n => {
+                // Движение
+                if(!n.archived) {
+                    n.x += n.vx; n.y += n.vy;
+                    if(n.x < 0 || n.x > cvsEnd.width) n.vx *= -1;
+                    if(n.y < 0 || n.y > cvsEnd.height) n.vy *= -1;
+                }
+                
+                n.pulse += 0.05;
+
+                // Проверка архивации
+                if(endState.archiving && n.x < endState.archiveX && !n.archived) {
+                    n.archived = true;
+                    // Искра при сохранении
+                    ctxEnd.fillStyle = '#fff';
+                    ctxEnd.fillRect(n.x-5, n.y-5, 10, 10);
+                }
+
+                // Визуал узла
+                ctxEnd.beginPath();
+                ctxEnd.arc(n.x, n.y, 4, 0, Math.PI*2);
+                
+                if(n.archived) {
+                    ctxEnd.fillStyle = '#a3be8c'; // Зеленый (Сохранен)
+                    ctxEnd.shadowBlur = 10; ctxEnd.shadowColor = '#a3be8c';
+                } else if(n.synced) {
+                    ctxEnd.fillStyle = '#88c0d0'; // Голубой (В сети)
+                    ctxEnd.shadowBlur = 5; ctxEnd.shadowColor = '#88c0d0';
+                } else {
+                    ctxEnd.fillStyle = '#4b4940'; // Серый (Изолирован)
+                    ctxEnd.shadowBlur = 0;
+                }
+                
+                ctxEnd.fill(); ctxEnd.shadowBlur = 0;
+
+                // Пульсация
+                if(n.synced && !n.archived && Math.sin(n.pulse) > 0.9) {
+                    ctxEnd.beginPath(); ctxEnd.arc(n.x, n.y, 15, 0, Math.PI*2);
+                    ctxEnd.strokeStyle = 'rgba(136, 192, 208, 0.5)'; ctxEnd.stroke();
+                }
+            });
+
+            requestAnimationFrame(renderEnd);
+        }
+
+        window.addEventListener('load', () => { resizeEnd(); renderEnd(); });
+        window.addEventListener('resize', resizeEnd);
+    </script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 04 // ПАРАДИГМА LORA И MESH</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+        .text-block li { margin-bottom: 10px; }
+
+        .math-box {
+            background: var(--text-main);
+            border: 2px solid var(--accent-red);
+            padding: 20px;
+            margin: 30px 0;
+            font-family: var(--font-mono);
+            color: var(--bg-base);
+            font-size: 1.2rem;
+            text-align: center;
+            box-shadow: 5px 5px 0 rgba(178, 67, 56, 0.3);
+        }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'CORE_PARADIGM';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        .quote-block .tooltip { color: var(--bg-alt); border-bottom-color: var(--bg-alt); }
+        .quote-block .tooltip:hover { background: var(--bg-alt); color: var(--text-main); }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ ГЛАВЫ 4 */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 800px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            color: #cdc8b0;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            width: 300px;
+        }
+
+        .control-group label { margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px;
+            background: var(--accent-red); cursor: pointer;
+            margin-top: -6px; border-radius: 0;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #4b4940;
+        }
+
+        .btn-sim {
+            background: transparent; color: var(--accent-red);
+            border: 2px solid var(--accent-red); padding: 8px 20px;
+            font-family: var(--font-mono); font-weight: bold;
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--accent-red); color: #fff; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            height: calc(100% - 120px);
+        }
+
+        #lora-canvas {
+            width: 100%; height: 100%;
+            background: #0a0a0c;
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px; font-family: var(--font-mono); font-size: 1rem;
+            color: #a8a38f; overflow-y: auto; background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; text-shadow: 0 0 8px rgba(178,67,56,0.6); }
+        .log-sys { color: #88c0d0; }
+        .log-warn { color: #ebcb8b; font-weight: bold; }
+        .log-ok { color: #a3be8c; font-weight: bold; text-shadow: 0 0 5px rgba(163,190,140,0.5); }
+        .log-data { color: #cdc8b0; padding-left: 10px; border-left: 2px solid #cdc8b0; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html">ГЛ_02</a>
+            <a href="chapter3.html">ГЛ_03</a>
+            <a href="chapter4.html" class="active">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_04 ]</span>
+            <h1 class="chapter-title">Парадигма LoRa & Mesh</h1>
+        </div>
+
+        <div class="quote-block">
+            Как передать сигнал на 20 километров в условиях плотной городской застройки, потратив на это мощность, сравнимую с яркостью одного светодиода? Ответом стала модуляция LoRa, которая перевернула наше понимание радиофизики, позволив извлекать полезную информацию из абсолютного шума.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>4.1. Физика CSS Модуляции</h3>
+                    <p>Традиционные рации пытаются "перекричать" эфир мощностью (амплитудная или частотная модуляция). Технология LoRa использует принципиально иной подход — <span class="tooltip" data-text="Chirp Spread Spectrum. Метод расширения спектра, использующий широкополосные линейно-частотные импульсы (чирпы). Первоначально применялся в радарах для поиска космических объектов.">CSS-модуляцию</span>.</p>
+                    <p>Единица данных кодируется непрерывным изменением частоты радиосигнала во времени. Эти импульсы называются "чирпами" (от англ. chirp — щебет). Чирп может повышать частоту (Up-chirp) или понижать (Down-chirp).</p>
+                    <p>Благодаря тому, что сигнал "размазан" по широкой полосе (Bandwidth), он становится невосприимчивым к эффекту Доплера, переотражениям от зданий и узкополосным помехам глушилок РЭБ. Трансивер SX1262 тратит на излучение всего 100 мВт (0.1 Вт), но пробивает дистанции, недоступные 10-ваттным классическим рациям.</p>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>4.2. Сигнал ниже уровня шума (SNR -20dB)</h3>
+                    <p>Согласно теореме Шеннона-Хартли, пропускная способность канала связи зависит от отношения сигнал/шум (<span class="tooltip" data-text="Signal-to-Noise Ratio. Для успешного приема обычного FM-радио или Wi-Fi сигнал должен быть громче фонового шума (SNR > 0).">SNR</span>). LoRa намеренно жертвует скоростью (падающей до сотен бит в секунду) ради колоссального <strong>Processing Gain (выигрыша от обработки)</strong>.</p>
+                    
+                    <div class="math-box">
+                        C = B × log₂(1 + S/N)
+                    </div>
+
+                    <p>Приемник LoRa способен корреляционно сложить чирпы и декодировать пакет даже при SNR равном <strong>-20 дБ</strong>. Это означает, что сигнал может быть <em>в 100 раз слабее</em> естественного электромагнитного шума планеты. Для стороннего радиоперехватчика ваш сигнал выглядит как отсутствие сигнала, просто случайный белый шум.</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">4.3. Spreading Factor (SF)</h3>
+                    <p>Главный параметр сети — <span class="tooltip" data-text="Коэффициент расширения спектра. Определяет длительность одного чирпа. При увеличении SF на 1 шаг, время в эфире удваивается, но дальность приема увеличивается.">Spreading Factor (SF)</span>, который варьируется от 7 до 12. </p>
+                    <ul>
+                        <li><strong>SF7 (Быстро):</strong> Короткие чирпы. Дальность небольшая, но пакет долетает за миллисекунды.</li>
+                        <li><strong>SF12 (Дальнобойно):</strong> Один пакет может передаваться в эфире 1.5 - 2 секунды. Энергия чирпа накапливается в приемнике, позволяя восстановить сигнал на экстремальных дистанциях (десятки километров).</li>
+                    </ul>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>4.4. Разрушение "Звезды" (Mesh)</h3>
+                    <p>LoRa решает проблему дальности, а ячеистая топология (<span class="tooltip" data-text="Mesh-сеть. Каждый участник сети является независимым маршрутизатором. Если один узел пропадает, данные автоматически идут через другой.">Mesh</span>) решает проблему SPOF.</p>
+                    
+                    
+
+[Image of Mesh vs Star network topology]
+
+                    
+                    <p>Классическая топология "Звезда" (сотовые вышки, Wi-Fi роутеры) требует центрального контроллера. В Mesh-сети центра нет. Каждая нода (даже находящаяся в рюкзаке пользователя) принимает чужие зашифрованные пакеты и ретранслирует их дальше. Чем больше людей пользуется сетью в городе, тем плотнее и надежнее она становится. Сигнал способен огибать препятствия и "перепрыгивать" целые районы.</p>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: ДЕМОДУЛЯЦИЯ ИЗ ШУМА ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Водопадная спектрограмма (Waterfall). Опустите сигнал ниже уровня шума (отрицательный SNR) и запустите пакет, чтобы увидеть работу математического фильтра LoRa.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>РАДИОЧАСТОТНЫЙ АНАЛИЗАТОР СПЕКТРА // LORA CSS</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <div class="control-group">
+                            <label>Уровень сигнал/шум (SNR): <span id="val-snr" style="color: var(--accent-red); font-weight: bold;">+10 dB</span></label>
+                            <input type="range" id="slider-snr" min="-25" max="10" value="10" step="1" oninput="updateLoraParams()">
+                        </div>
+                        <div class="control-group">
+                            <label>Spreading Factor (SF): <span id="val-sf">SF7 (Fast)</span></label>
+                            <input type="range" id="slider-sf" min="7" max="12" value="7" step="1" oninput="updateLoraParams()">
+                        </div>
+                        <button class="btn-sim" onclick="transmitChirp()">ПЕРЕДАТЬ ПАКЕТ</button>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="lora-canvas"></canvas>
+                        <div class="sim-terminal" id="lora-terminal">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const cLora = document.getElementById('lora-canvas');
+        const ctxL = cLora.getContext('2d');
+        const termL = document.getElementById('lora-terminal');
+
+        let loraParams = { snr: 10, sf: 7 };
+        let waterfallData = [];
+        let activeTransmissions = [];
+
+        function resizeLora() {
+            const rect = cLora.parentElement.getBoundingClientRect();
+            cLora.width = rect.width;
+            cLora.height = rect.height;
+            // Инициализация пустого водопада
+            waterfallData = new Array(cLora.height).fill(0).map(() => new Array(cLora.width).fill(0));
+        }
+
+        function logLora(msg, type="log-sys") {
+            const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+            termL.innerHTML += `<span class="${type}">[${time}] ${msg}</span>`;
+            termL.scrollTop = termL.scrollHeight;
+        }
+
+        function updateLoraParams() {
+            loraParams.snr = parseInt(document.getElementById('slider-snr').value);
+            loraParams.sf = parseInt(document.getElementById('slider-sf').value);
+            
+            document.getElementById('val-snr').innerText = (loraParams.snr > 0 ? "+" : "") + loraParams.snr + " dB";
+            document.getElementById('val-snr').style.color = loraParams.snr < -10 ? '#ebcb8b' : '#b24338';
+            document.getElementById('val-sf').innerText = `SF${loraParams.sf} (${loraParams.sf === 12 ? 'Slow/Far' : 'Fast'})`;
+        }
+
+        // Запуск пакета
+        function transmitChirp() {
+            logLora("=========================", "log-sys");
+            logLora(`[TX] Инициация передачи. Настройка модема: SF=${loraParams.sf}, BW=250kHz`, "log-sys");
+            logLora(`[СИГНАЛ/ШУМ] Текущий SNR в эфире: ${loraParams.snr} dB`, "log-warn");
+            
+            // Длительность чирпа зависит от SF
+            let duration = (loraParams.sf - 6) * 30; // Условная длительность для визуала
+            
+            activeTransmissions.push({
+                y: 0,
+                duration: duration,
+                snr: loraParams.snr,
+                sf: loraParams.sf,
+                chirps: []
+            });
+            
+            // Расчет успешности демодуляции
+            let canDecode = true;
+            let limit = -7.5; // Базовый предел для SF7
+            if (loraParams.sf === 8) limit = -10;
+            if (loraParams.sf === 9) limit = -12.5;
+            if (loraParams.sf === 10) limit = -15;
+            if (loraParams.sf === 11) limit = -17.5;
+            if (loraParams.sf === 12) limit = -20;
+
+            setTimeout(() => {
+                logLora(`[DSP] Начат корреляционный анализ (Processing Gain)...`, "log-sys");
+                setTimeout(() => {
+                    if (loraParams.snr >= limit) {
+                        logLora(`[RX] ПИК КОРРЕЛЯЦИИ НАЙДЕН. Сигнал успешно извлечен из шума!`, "log-ok");
+                        logLora(`> Payload: "HELLO_MESH" (AES-256 Valid)`, "log-data");
+                    } else {
+                        logLora(`[КРИТИЧНО] Сигнал потерян. Текущий SF${loraParams.sf} может декодировать только до ${limit}dB.`, "log-err");
+                        logLora(`[РЕШЕНИЕ] Повысьте Spreading Factor (SF) для увеличения чувствительности.`, "log-warn");
+                    }
+                }, duration * 15); // Имитация времени обработки (Airtime)
+            }, 500);
+        }
+
+        // Отрисовка водопада (Waterfall)
+        function renderWaterfall() {
+            // Смещение водопада вниз (эффект скроллинга времени)
+            let imgData = ctxL.getImageData(0, 0, cLora.width, cLora.height - 1);
+            ctxL.putImageData(imgData, 0, 1);
+
+            // Генерация новой верхней строки
+            let rowData = ctxL.createImageData(cLora.width, 1);
+            let buf = new Uint32Array(rowData.data.buffer);
+
+            // 1. Рисуем базовый белый шум (Thermal Noise)
+            for(let x = 0; x < cLora.width; x++) {
+                let noiseLevel = Math.random() * 80; 
+                // RGBA (A B G R) в Little Endian
+                buf[x] = (255 << 24) | (noiseLevel << 16) | ((noiseLevel+10) << 8) | (noiseLevel+5);
+            }
+
+            // 2. Наложение активных чирпов на текущую строку
+            for (let i = activeTransmissions.length - 1; i >= 0; i--) {
+                let tx = activeTransmissions[i];
+                tx.y++;
+
+                if (tx.y > tx.duration) {
+                    activeTransmissions.splice(i, 1);
+                    continue;
+                }
+
+                // Логика зигзагов (Chirps). Форма: /\/\/\/\
+                let numChirps = 14 - tx.sf; // Чем выше SF, тем медленнее/меньше зигзагов
+                let period = tx.duration / numChirps;
+                let phase = (tx.y % period) / period; // От 0 до 1
+
+                let centerFreq = cLora.width / 2;
+                let bandwidth = cLora.width * 0.8;
+                let chirpX = (centerFreq - bandwidth/2) + phase * bandwidth;
+
+                // Яркость сигнала зависит от SNR
+                // Если SNR = +10, яркость макс. Если SNR = -20, яркость минимальна, сливается с шумом
+                let visibility = (tx.snr + 25) / 35; // Нормализация от 0 до 1
+                if (visibility < 0) visibility = 0;
+
+                // Отрисовка "размазанного" чирпа по оси X
+                let chirpWidth = 4;
+                for (let w = -chirpWidth; w <= chirpWidth; w++) {
+                    let posX = Math.floor(chirpX + w);
+                    if (posX >= 0 && posX < cLora.width) {
+                        let intensity = (1 - Math.abs(w)/chirpWidth) * 255 * visibility;
+                        // Добавляем к шуму зеленый цвет сигнала
+                        buf[posX] = (255 << 24) | (0 << 16) | (Math.min(255, 50 + intensity) << 8) | (0); 
+                    }
+                }
+            }
+
+            ctxL.putImageData(rowData, 0, 0);
+
+            // Наложение сетки (Оси частот)
+            ctxL.fillStyle = 'rgba(75, 73, 64, 0.5)';
+            ctxL.fillRect(cLora.width/2, 0, 1, cLora.height); // Центральная частота
+            ctxL.fillRect(cLora.width*0.1, 0, 1, cLora.height); // Левая граница BW
+            ctxL.fillRect(cLora.width*0.9, 0, 1, cLora.height); // Правая граница BW
+
+            // Текст частот сверху
+            ctxL.fillStyle = 'rgba(26, 26, 23, 0.8)';
+            ctxL.fillRect(0, 0, cLora.width, 25);
+            ctxL.fillStyle = '#88c0d0';
+            ctxL.font = '12px monospace';
+            ctxL.textAlign = 'center';
+            ctxL.fillText("868.0 MHz (Center Freq)", cLora.width/2, 16);
+            ctxL.fillText("-125 kHz", cLora.width*0.1, 16);
+            ctxL.fillText("+125 kHz", cLora.width*0.9, 16);
+
+            requestAnimationFrame(renderWaterfall);
+        }
+
+        window.addEventListener('load', () => {
+            resizeLora();
+            updateLoraParams();
+            renderWaterfall();
+        });
+        window.addEventListener('resize', resizeLora);
+    </script>
+</body>
+</html>

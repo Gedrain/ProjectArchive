@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 08 // АППАРАТНЫЙ УЗЕЛ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+        .text-block li { margin-bottom: 10px; }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'HARDWARE_SPECS';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        .quote-block .tooltip { color: var(--bg-alt); border-bottom-color: var(--bg-alt); }
+        .quote-block .tooltip:hover { background: var(--bg-alt); color: var(--text-main); }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ ГЛАВЫ 8 */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 800px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 30px;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            color: #cdc8b0;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            width: 300px;
+        }
+
+        .control-group label { margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px;
+            background: #eccc68; cursor: pointer; /* Желтый для солнца */
+            margin-top: -6px; border-radius: 50%;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #4b4940;
+        }
+
+        .btn-sim {
+            background: transparent; color: var(--bg-base);
+            border: 2px solid var(--bg-base); padding: 8px 20px;
+            font-family: var(--font-mono); font-weight: bold;
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--bg-base); color: var(--text-main); }
+        .btn-sim.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-sim.danger:hover { background: var(--accent-red); color: #fff; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100% - 120px);
+        }
+
+        #hw-canvas {
+            width: 100%; height: 100%;
+            background: #1a1a1c;
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px; font-family: var(--font-mono); font-size: 0.95rem;
+            color: #a8a38f; overflow-y: auto; background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 8px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; text-shadow: 0 0 5px rgba(178,67,56,0.5);}
+        .log-sys { color: #88c0d0; }
+        .log-pwr { color: #ebcb8b; }
+        .log-ok { color: #a3be8c; }
+        .log-data { color: #cdc8b0; font-family: monospace; border-left: 2px solid #cdc8b0; padding-left: 10px;}
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html">ГЛ_02</a>
+            <a href="chapter3.html">ГЛ_03</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter5.html">ГЛ_05</a>
+            <a href="chapter6.html">ГЛ_06</a>
+            <a href="chapter7.html">ГЛ_07</a>
+            <a href="chapter8.html" class="active">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_08 ]</span>
+            <h1 class="chapter-title">Аппаратная Инженерия</h1>
+        </div>
+
+        <div class="quote-block">
+            Любая сеть мертва без электричества. Создание автономного ретранслятора, способного пережить зиму, пасмурные недели и морозы до -30°C без обслуживания — это главная инженерная задача децентрализации. Компоненты должны подбираться не по производительности, а по экстремальной энергоэффективности.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>8.1. Вычислительное ядро и Трансивер</h3>
+                    <p>Вместо популярных, но "прожорливых" чипов ESP32, в качестве мозга узла (<span class="tooltip" data-text="Microcontroller Unit. Основной процессор, управляющий логикой маршрутизации и шифрования.">MCU1</span>) выбран <strong>nRF52840</strong> (ARM Cortex-M4F). Его главное преимущество — фантастическая энергоэффективность. В спящем режиме он потребляет микроамперы.</p>
+                    
+                    <p>За радиосвязь отвечает трансивер <strong>Semtech SX1262</strong>. Он потребляет всего 60 мА при максимальной мощности передачи 22 дБм (около 160 мВт). Обязательное условие — наличие генератора с термокомпенсацией (<span class="tooltip" data-text="Temperature Compensated Crystal Oscillator. Предотвращает уплывание частоты сигнала на сильном морозе или в жару. Без него чирпы не совпадут, и сигнал не будет декодирован.">TCXO</span>), чтобы частота не "уплыла" при перепадах температур на улице.</p>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>8.2. Батарея LiFePO4 против Li-Ion</h3>
+                    <p>Обычные литий-ионные (Li-Ion или Li-Po) аккумуляторы из смартфонов категорически запрещено использовать в уличных автономных станциях. При заряде ниже 0°C внутри них образуются металлические дендриты, протыкающие сепаратор, что ведет к короткому замыканию и <span class="tooltip" data-text="Thermal Runaway. Самоподдерживающаяся экзотермическая реакция, приводящая к возгоранию или взрыву батареи.">термическому разгону (взрыву)</span>.</p>
+                    <p>Решением является <strong>LiFePO4 (Литий-железо-фосфат)</strong>. Эта химия термически стабильна, не горит при пробитии, выдерживает до 5000 циклов (около 10-15 лет работы) и способна штатно заряжаться и отдавать ток даже в лютый мороз.</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">8.3. Интеллектуальная зарядка MPPT</h3>
+                    <p>Солнечная панель (SP1) подключена к аккумулятору (BAT1) не напрямую, а через специальный <span class="tooltip" data-text="Maximum Power Point Tracking. Алгоритм, непрерывно вычисляющий оптимальное соотношение напряжения и тока от солнечной панели для получения максимума Ватт.">MPPT-контроллер U1 (чип CN3791)</span>.</p>
+                    
+                    <p>Панель выдает непостоянное напряжение (например, U=6.5V в пасмурную погоду). MPPT работает как интеллектуальная коробка передач (DC-DC преобразование): он "срезает" лишние вольты и конвертирует их в амперы, выжимая из слабого солнца максимум мощности для зарядки.</p>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>8.4. State Machine (Режимы работы)</h3>
+                    <ul>
+                        <li><strong>Дневной режим:</strong> SP1 генерирует энергию. Часть тока (~2mA) идет на питание MCU1 для поддержки Mesh-сети. Излишки (до 1.5A) закачиваются в батарею.</li>
+                        <li><strong>Ночной режим:</strong> Диод Шоттки в контроллере предотвращает обратную утечку. Узел живет за счет BAT1. Напряжение плавно падает с 3.35V до 3.2V.</li>
+                        <li><strong>Аварийный (Cut-off):</strong> Если панель месяц засыпана снегом, напряжение BAT1 падает до критических 2.5V. Плата <span class="tooltip" data-text="Battery Management System. Микросхема, защищающая аккумулятор от глубокого разряда, перезаряда и короткого замыкания.">BMS (U2)</span> аппаратно разрывает цепь. MCU1 обесточивается, ретранслятор "умирает", спасая батарею от необратимой деградации.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: АВТОНОМНАЯ ЭНЕРГОСИСТЕМА ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Управление погодой. Регулируйте инсоляцию (Солнце), чтобы проверить работу MPPT, зарядку LiFePO4 и срабатывание аппаратной защиты BMS (Cut-Off) при полном разряде.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>ЭЛЕКТРИЧЕСКАЯ СХЕМА (STATE MACHINE) // OFF-GRID NODE</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <div class="control-group">
+                            <label>Инсоляция (Солнце): <span id="val-sun" style="color: #eccc68; font-weight: bold;">50%</span></label>
+                            <input type="range" id="slider-sun" min="0" max="100" value="50" step="1" oninput="updateSun()">
+                        </div>
+                        <button class="btn-sim danger" onclick="simulateSnow()">ЗАСЫПАТЬ СНЕГОМ (0%)</button>
+                        <button class="btn-sim" style="color: #88c0d0; border-color: #88c0d0;" onclick="forceTx()">[RX/TX] ПРИЕМОПЕРЕДАЧА</button>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="hw-canvas"></canvas>
+                        <div class="sim-terminal" id="hw-terminal">
+                            <span class="log-sys">[СИСТЕМА] Электрическая цепь замкнута. Инициализация...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const cHW = document.getElementById('hw-canvas');
+        const ctxHW = cHW.getContext('2d');
+        const termHW = document.getElementById('hw-terminal');
+
+        let hwState = {
+            time: 0,
+            sunIntensity: 50,
+            batteryCharge: 50, // %
+            batteryVoltage: 3.25, // 2.5V to 3.35V для LiFePO4
+            generationAmp: 0,
+            consumptionAmp: 0.05, // Базовое потребление MCU (спящий режим)
+            bmsCutoff: false,
+            txActive: false,
+            txTimer: 0,
+            particles: []
+        };
+
+        const POS = {
+            sun: {x: 100, y: 100},
+            panel: {x: 100, y: 300},
+            mppt: {x: 300, y: 300},
+            bat: {x: 500, y: 300},
+            mcu: {x: 700, y: 300}
+        };
+
+        function resizeHW() {
+            const rect = cHW.parentElement.getBoundingClientRect();
+            cHW.width = rect.width;
+            cHW.height = rect.height;
+            // Пересчет позиций для адаптивности
+            let spacing = cHW.width / 5;
+            POS.sun = {x: spacing*0.5, y: cHW.height*0.2};
+            POS.panel = {x: spacing*0.5, y: cHW.height*0.6};
+            POS.mppt = {x: spacing*1.5, y: cHW.height*0.6};
+            POS.bat = {x: spacing*2.8, y: cHW.height*0.6};
+            POS.mcu = {x: spacing*4.2, y: cHW.height*0.6};
+        }
+
+        function logHW(msg, type="log-sys") {
+            const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+            termHW.innerHTML += `<span class="${type}">[${time}] ${msg}</span>`;
+            termHW.scrollTop = termHW.scrollHeight;
+        }
+
+        function updateSun() {
+            hwState.sunIntensity = parseInt(document.getElementById('slider-sun').value);
+            document.getElementById('val-sun').innerText = hwState.sunIntensity + "%";
+            logHW(`[ДАТЧИК] Уровень инсоляции изменен на ${hwState.sunIntensity}%.`, "log-pwr");
+        }
+
+        function simulateSnow() {
+            document.getElementById('slider-sun').value = 0;
+            updateSun();
+            logHW(`[АВАРИЯ] Солнечная панель SP1 засыпана снегом. Токоотдача прекращена.`, "log-err");
+            logHW(`[ПИТАНИЕ] Переход в полностью автономный режим (только BAT1).`, "log-warn");
+        }
+
+        function forceTx() {
+            if(hwState.bmsCutoff) {
+                logHW("[ОШИБКА] Невозможно передать пакет. MCU1 аппаратно обесточен BMS.", "log-err");
+                return;
+            }
+            hwState.txActive = true;
+            hwState.txTimer = 60; // 1 секунда анимации
+            logHW("[РАДИО] Модем SX1262 активирован. TX Power: 22dBm.", "log-sys");
+            logHW("> Передача пакета LoRa... Потребление возросло.", "log-data");
+        }
+
+        // Обновление физики цепи
+        function updatePhysics() {
+            hwState.time++;
+
+            // Генерация
+            hwState.generationAmp = (hwState.sunIntensity / 100) * 1.5; // До 1.5А зарядки
+            
+            // Потребление
+            let currentConsumption = hwState.consumptionAmp;
+            if(hwState.txActive) {
+                currentConsumption = 0.5; // Резкий скачок при TX
+                hwState.txTimer--;
+                if(hwState.txTimer <= 0) hwState.txActive = false;
+            }
+
+            if(hwState.bmsCutoff) currentConsumption = 0; // Всё отключено
+
+            // Баланс энергии
+            let netAmp = hwState.generationAmp - currentConsumption;
+            
+            // Изменение заряда батареи (Ускоренно для симуляции)
+            hwState.batteryCharge += netAmp * 0.05;
+            
+            // Ограничения физики батареи
+            if(hwState.batteryCharge >= 100) {
+                hwState.batteryCharge = 100;
+                if(hwState.generationAmp > 0 && hwState.time % 120 === 0) {
+                    logHW("[BMS] Аккумулятор 100%. Контроллер сбрасывает излишки энергии.", "log-ok");
+                }
+            }
+
+            // Напряжение (Упрощенная кривая разряда LiFePO4: 2.5 - 3.35)
+            hwState.batteryVoltage = 2.5 + (hwState.batteryCharge / 100) * (3.35 - 2.5);
+
+            // BMS Cut-off (Защита от глубокого разряда)
+            if(hwState.batteryCharge <= 0) {
+                hwState.batteryCharge = 0;
+                hwState.batteryVoltage = 2.5;
+                if(!hwState.bmsCutoff) {
+                    hwState.bmsCutoff = true;
+                    logHW("[КРИТИЧЕСКИЙ РАЗРЯД] Напряжение BAT1 упало до 2.5V!", "log-err");
+                    logHW("[BMS] СРАБАТЫВАНИЕ ЗАЩИТЫ (CUT-OFF). Транзисторы закрыты.", "log-err");
+                    logHW("[СИСТЕМА] MCU1 обесточен. Узел выпал из Mesh-сети.", "log-err");
+                }
+            }
+
+            // Выход из Cut-off (если пошло солнце)
+            if(hwState.bmsCutoff && hwState.batteryCharge > 5) {
+                hwState.bmsCutoff = false;
+                logHW("[BMS] Напряжение восстановилось > 2.8V. Цепь питания замкнута.", "log-ok");
+                logHW("[СИСТЕМА] Booting nRF52840... Узел вернулся в сеть.", "log-ok");
+            }
+
+            // Логирование статуса раз в 3 секунды
+            if(hwState.time % 180 === 0) {
+                let status = hwState.netAmp > 0 ? "ЗАРЯДКА" : "РАЗРЯД";
+                if(hwState.bmsCutoff) status = "ОТКЛЮЧЕНО (DEEP SLEEP)";
+                logHW(`[ТЕЛЕМЕТРИЯ] BAT1: ${hwState.batteryVoltage.toFixed(2)}V (${Math.floor(hwState.batteryCharge)}%). Статус: ${status}`, "log-data");
+            }
+
+            // Спавн частиц (Электроны в проводах)
+            // От панели к MPPT
+            if(hwState.generationAmp > 0 && hwState.time % (Math.floor(10 / hwState.generationAmp)) === 0) {
+                hwState.particles.push({ x: POS.panel.x + 30, y: POS.panel.y, targetX: POS.mppt.x - 30, targetY: POS.mppt.y, color: '#eccc68', progress: 0, speed: 0.02 + hwState.generationAmp*0.01 });
+            }
+            // От MPPT к Батарее
+            if(netAmp > 0 && hwState.time % Math.max(2, Math.floor(10 / netAmp)) === 0) {
+                hwState.particles.push({ x: POS.mppt.x + 30, y: POS.mppt.y, targetX: POS.bat.x - 30, targetY: POS.bat.y, color: '#a3be8c', progress: 0, speed: 0.03 });
+            }
+            // От Батареи к MCU (Потребление)
+            if(!hwState.bmsCutoff && hwState.time % (hwState.txActive ? 2 : 20) === 0) {
+                hwState.particles.push({ x: POS.bat.x + 30, y: POS.bat.y, targetX: POS.mcu.x - 30, targetY: POS.mcu.y, color: '#ebcb8b', progress: 0, speed: hwState.txActive ? 0.08 : 0.02 });
+            }
+        }
+
+        // Отрисовка
+        function renderHW() {
+            ctxHW.clearRect(0, 0, cHW.width, cHW.height);
+            updatePhysics();
+
+            // 1. СОЛНЦЕ И ЛУЧИ
+            ctxHW.beginPath(); ctxHW.arc(POS.sun.x, POS.sun.y, 40, 0, Math.PI*2);
+            let sunOp = hwState.sunIntensity / 100;
+            ctxHW.fillStyle = `rgba(236, 204, 104, ${sunOp})`;
+            ctxHW.shadowBlur = 40 * sunOp; ctxHW.shadowColor = '#eccc68';
+            ctxHW.fill(); ctxHW.shadowBlur = 0;
+
+            if(sunOp > 0) {
+                ctxHW.strokeStyle = `rgba(236, 204, 104, ${sunOp * 0.5})`; ctxHW.lineWidth = 2;
+                for(let i=0; i<3; i++) {
+                    let r = (hwState.time*0.5 + i*20) % 60;
+                    ctxHW.beginPath(); ctxHW.arc(POS.sun.x, POS.sun.y, 40 + r, 0, Math.PI*2); ctxHW.stroke();
+                }
+                // Луч к панели
+                ctxHW.beginPath(); ctxHW.moveTo(POS.sun.x, POS.sun.y + 40); ctxHW.lineTo(POS.panel.x, POS.panel.y - 30);
+                let grad = ctxHW.createLinearGradient(POS.sun.x, POS.sun.y+40, POS.panel.x, POS.panel.y-30);
+                grad.addColorStop(0, `rgba(236, 204, 104, ${sunOp * 0.8})`); grad.addColorStop(1, 'transparent');
+                ctxHW.strokeStyle = grad; ctxHW.lineWidth = 20; ctxHW.stroke();
+            }
+
+            // 2. ПРОВОДА
+            ctxHW.strokeStyle = '#4b4940'; ctxHW.lineWidth = 4;
+            ctxHW.beginPath(); ctxHW.moveTo(POS.panel.x, POS.panel.y); ctxHW.lineTo(POS.mppt.x, POS.mppt.y); ctxHW.stroke();
+            ctxHW.beginPath(); ctxHW.moveTo(POS.mppt.x, POS.mppt.y); ctxHW.lineTo(POS.bat.x, POS.bat.y); ctxHW.stroke();
+            ctxHW.beginPath(); ctxHW.moveTo(POS.bat.x, POS.bat.y); ctxHW.lineTo(POS.mcu.x, POS.mcu.y);
+            if(hwState.bmsCutoff) ctxHW.setLineDash([5, 5]); // Разорванная цепь
+            ctxHW.stroke(); ctxHW.setLineDash([]);
+
+            // 3. ЧАСТИЦЫ ЭНЕРГИИ
+            for(let i = hwState.particles.length - 1; i >= 0; i--) {
+                let p = hwState.particles[i];
+                p.progress += p.speed;
+                if(p.progress >= 1) { hwState.particles.splice(i, 1); continue; }
+                let curX = p.x + (p.targetX - p.x) * p.progress;
+                let curY = p.y + (p.targetY - p.y) * p.progress;
+                ctxHW.beginPath(); ctxHW.arc(curX, curY, 3, 0, Math.PI*2);
+                ctxHW.fillStyle = p.color; ctxHW.fill();
+            }
+
+            // 4. КОМПОНЕНТЫ УЗЛА
+            ctxHW.font = 'bold 12px monospace'; ctxHW.textAlign = 'center';
+
+            // Солнечная панель (SP1)
+            ctxHW.fillStyle = '#1a1a17'; ctxHW.fillRect(POS.panel.x - 30, POS.panel.y - 30, 60, 60);
+            ctxHW.strokeStyle = '#88c0d0'; ctxHW.lineWidth = 2; ctxHW.strokeRect(POS.panel.x - 30, POS.panel.y - 30, 60, 60);
+            ctxHW.beginPath(); ctxHW.moveTo(POS.panel.x, POS.panel.y - 30); ctxHW.lineTo(POS.panel.x, POS.panel.y + 30); ctxHW.stroke();
+            ctxHW.beginPath(); ctxHW.moveTo(POS.panel.x - 30, POS.panel.y); ctxHW.lineTo(POS.panel.x + 30, POS.panel.y); ctxHW.stroke();
+            ctxHW.fillStyle = '#88c0d0'; ctxHW.fillText("SP1 10W", POS.panel.x, POS.panel.y + 45);
+
+            // MPPT Контроллер (U1)
+            ctxHW.fillStyle = '#4b4940'; ctxHW.fillRect(POS.mppt.x - 30, POS.mppt.y - 25, 60, 50);
+            ctxHW.fillStyle = '#cdc8b0'; ctxHW.fillText("MPPT", POS.mppt.x, POS.mppt.y);
+            ctxHW.fillStyle = '#ebcb8b'; ctxHW.fillText("DC-DC", POS.mppt.x, POS.mppt.y + 15);
+            // Индикатор трекинга
+            if(hwState.generationAmp > 0) {
+                ctxHW.fillStyle = (hwState.time % 20 < 10) ? '#a3be8c' : '#4b4940';
+                ctxHW.beginPath(); ctxHW.arc(POS.mppt.x - 20, POS.mppt.y - 15, 3, 0, Math.PI*2); ctxHW.fill();
+            }
+
+            // Батарея LiFePO4 (BAT1)
+            ctxHW.fillStyle = '#1a1a17'; ctxHW.fillRect(POS.bat.x - 25, POS.bat.y - 40, 50, 80);
+            ctxHW.strokeStyle = '#cdc8b0'; ctxHW.strokeRect(POS.bat.x - 25, POS.bat.y - 40, 50, 80);
+            ctxHW.fillStyle = '#cdc8b0'; ctxHW.fillRect(POS.bat.x - 10, POS.bat.y - 45, 20, 5); // Клемма
+            
+            // Заливка батареи
+            let fillH = (hwState.batteryCharge / 100) * 76;
+            ctxHW.fillStyle = hwState.batteryCharge < 15 ? '#b24338' : '#a3be8c';
+            ctxHW.fillRect(POS.bat.x - 23, POS.bat.y + 38 - fillH, 46, fillH);
+            
+            ctxHW.fillStyle = '#cdc8b0'; 
+            ctxHW.fillText(`${hwState.batteryVoltage.toFixed(2)}V`, POS.bat.x, POS.bat.y + 55);
+            if(hwState.bmsCutoff) {
+                ctxHW.fillStyle = '#b24338'; ctxHW.fillText("BMS CUT-OFF", POS.bat.x, POS.bat.y + 70);
+            }
+
+            // MCU + LORA (nRF52840)
+            ctxHW.fillStyle = hwState.bmsCutoff ? '#4b4940' : '#88c0d0'; 
+            ctxHW.fillRect(POS.mcu.x - 30, POS.mcu.y - 30, 60, 60);
+            ctxHW.fillStyle = '#1a1a17'; ctxHW.fillRect(POS.mcu.x - 20, POS.mcu.y - 20, 40, 40);
+            ctxHW.fillStyle = hwState.bmsCutoff ? '#4b4940' : '#cdc8b0';
+            ctxHW.fillText("nRF52", POS.mcu.x, POS.mcu.y);
+            
+            // Антенна и радиоволны
+            ctxHW.strokeStyle = '#cdc8b0'; ctxHW.lineWidth = 2;
+            ctxHW.beginPath(); ctxHW.moveTo(POS.mcu.x, POS.mcu.y - 30); ctxHW.lineTo(POS.mcu.x, POS.mcu.y - 60); ctxHW.stroke();
+            if(hwState.txActive && !hwState.bmsCutoff) {
+                let wave = (hwState.time % 15) * 2;
+                ctxHW.beginPath(); ctxHW.arc(POS.mcu.x, POS.mcu.y - 60, wave, Math.PI, 0); 
+                ctxHW.strokeStyle = `rgba(136, 192, 208, ${1 - wave/30})`; ctxHW.stroke();
+            }
+
+            requestAnimationFrame(renderHW);
+        }
+
+        window.addEventListener('load', () => { resizeHW(); renderHW(); });
+        window.addEventListener('resize', resizeHW);
+    </script>
+</body>
+</html>

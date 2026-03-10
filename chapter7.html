@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 07 // ГИБРИДНЫЙ ИНТРАНЕТ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+        .text-block li { margin-bottom: 10px; }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'NETWORK_BRIDGE';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        .quote-block .tooltip { color: var(--bg-alt); border-bottom-color: var(--bg-alt); }
+        .quote-block .tooltip:hover { background: var(--bg-alt); color: var(--text-main); }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ ГЛАВЫ 7 */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 750px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 15px;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+            align-items: center;
+        }
+
+        .btn-sim {
+            background: transparent; color: var(--bg-base);
+            border: 2px solid var(--bg-base); padding: 8px 20px;
+            font-family: var(--font-mono); font-weight: bold;
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--bg-base); color: var(--text-main); }
+
+        .btn-sim.active-btn { background: #88c0d0; color: #1a1a17; border-color: #88c0d0; }
+        .btn-sim.tx-lora { border-color: #ebcb8b; color: #ebcb8b; }
+        .btn-sim.tx-lora:hover { background: #ebcb8b; color: #1a1a17; }
+        .btn-sim.tx-lan { border-color: #a3be8c; color: #a3be8c; }
+        .btn-sim.tx-lan:hover { background: #a3be8c; color: #1a1a17; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100% - 120px);
+        }
+
+        #bridge-canvas {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1c 0%, #0a0a0c 100%);
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px; font-family: var(--font-mono); font-size: 0.95rem;
+            color: #a8a38f; overflow-y: auto; background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 8px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; }
+        .log-sys { color: #88c0d0; }
+        .log-lora { color: #ebcb8b; }
+        .log-lan { color: #a3be8c; }
+        .log-bridge { color: #b8b19e; font-style: italic; border-left: 2px solid #b8b19e; padding-left: 10px;}
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html">ГЛ_02</a>
+            <a href="chapter3.html">ГЛ_03</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter5.html">ГЛ_05</a>
+            <a href="chapter6.html">ГЛ_06</a>
+            <a href="chapter7.html" class="active">ГЛ_07</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_07 ]</span>
+            <h1 class="chapter-title">Гибридный Интранет</h1>
+        </div>
+
+        <div class="quote-block">
+            Автономная радиосеть не обязана быть абсолютно изолированной. Истинная мощь архитектуры раскрывается, когда мы создаем мосты (Bridges) между медленным, но независимым эфиром LoRa и высокоскоростными локальными сетями (LAN), сохраняя полный суверенитет над собственными данными.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>7.1. Архитектура Шлюза (Gateway)</h3>
+                    <p>Для объединения двух разных физических сред используется <span class="tooltip" data-text="Узел сети, транслирующий данные между несовместимыми протоколами (например, из радиоэфира в Ethernet-кабель).">Шлюз</span>. В нашем случае это связка радиомодуля (nRF52840) и микрокомпьютера.</p>
+                    <p>Радиомодуль подключается к <span class="tooltip" data-text="Single Board Computer. Одноплатный компьютер (например, Raspberry Pi), работающий на полноценной ОС Linux и имеющий сетевые интерфейсы.">SBC</span> через Serial-порт (USB). Радио принимает зашифрованные пакеты из эфира, передает их по кабелю в Linux-систему, где специальный скрипт обрабатывает их и отправляет в локальную сеть.</p>
+                    
+                    <p>Это позволяет, например, двум автономным Mesh-сетям в разных городах общаться друг с другом через ваш собственный VPN-тоннель, минуя серверы публичных операторов.</p>
+                </div>
+
+                <div class="text-block" style="margin-top: 40px;">
+                    <h3>7.2. Протокол MQTT</h3>
+                    <p>Для маршрутизации внутри локальной сети идеально подходит протокол <span class="tooltip" data-text="Message Queuing Telemetry Transport. Легковесный протокол обмена сообщениями по шаблону издатель/подписчик, стандарт де-факто для Умного дома и IoT.">MQTT</span>. На Raspberry Pi разворачивается локальный сервер (Брокер) Mosquitto.</p>
+                    <p>Каждое текстовое сообщение или GPS-координата из радиоэфира публикуется в определенный <span class="tooltip" data-text="Именованный канал в MQTT (например: msh/EU_868/2/json), на который могут подписываться клиенты для получения данных.">Топик</span>. Любое устройство в вашей домашней сети (ПК, смартфон с Wi-Fi, сервер умного дома Home Assistant) может подписаться на этот топик и мгновенно получать данные из радиоэфира, не имея собственной антенны.</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">7.3. Федерация Matrix</h3>
+                    <p>Если MQTT — это машинный язык, то для удобного общения людей мы используем протокол <span class="tooltip" data-text="Открытый протокол для децентрализованной связи в реальном времени. В отличие от Telegram, вы можете поднять свой собственный сервер Matrix дома.">Matrix</span>.</p>
+                    
+                    <p>Архитектура федерации означает, что не существует единого центрального сервера. Вы поднимаете свой Homeserver (например, Synapse) на домашнем мини-ПК.</p>
+                    <p><strong>Python-мост:</strong> Пишется небольшой скрипт-демон. Он слушает локальный MQTT-брокер. Как только с улицы по радио прилетает пакет от человека с рацией, скрипт перехватывает его и отправляет в чат Matrix. Пользователь, сидящий за ПК дома в удобном клиенте (Element), видит это сообщение и может ответить на него текстом, который пройдет обратный путь: <em>ПК -> Matrix -> Python -> MQTT -> USB -> LoRa -> Эфир</em>.</p>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: АППАРАТНЫЙ МОСТ ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Симуляция транзита данных. Слева — автономная радиосеть (LoRa). Справа — оптический Интранет (LAN/Matrix). Управляйте шлюзом, чтобы связать среды.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>МАРШРУТИЗАЦИЯ СРЕД: LORA PHY <-> MQTT BROKER <-> TCP/IP</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <button class="btn-sim" id="btn-bridge" onclick="toggleBridge()">ВКЛЮЧИТЬ MQTT-ШЛЮЗ</button>
+                        <button class="btn-sim tx-lora" onclick="sendFromLoRa()">[TX] ИЗ РАДИОЭФИРА</button>
+                        <button class="btn-sim tx-lan" onclick="sendFromLAN()">[TX] ИЗ ИНТРАНЕТА</button>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="bridge-canvas"></canvas>
+                        <div class="sim-terminal" id="bridge-terminal">
+                            <span class="log-sys">[СИСТЕМА] Интерфейсы инициализированы.</span>
+                            <span class="log-warn">[МОСТ] Соединение /dev/ttyUSB0 (Serial) закрыто.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script>
+        const canvasBg = document.getElementById('home-canvas');
+        const ctxBg = canvasBg.getContext('2d');
+        let bgNodes = [];
+        let bgMouse = { x: null, y: null, radius: 150 };
+
+        function resizeBg() { canvasBg.width = window.innerWidth; canvasBg.height = window.innerHeight; initBgNetwork(); }
+        window.addEventListener('mousemove', (e) => { bgMouse.x = e.x; bgMouse.y = e.y; });
+        window.addEventListener('mouseout', () => { bgMouse.x = null; bgMouse.y = null; });
+
+        function initBgNetwork() {
+            bgNodes = [];
+            for (let i = 0; i < Math.floor((canvasBg.width * canvasBg.height) / 20000); i++) {
+                bgNodes.push({ x: Math.random() * canvasBg.width, y: Math.random() * canvasBg.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, pulse: Math.random() * Math.PI * 2 });
+            }
+        }
+
+        function animateBg() {
+            ctxBg.clearRect(0, 0, canvasBg.width, canvasBg.height);
+            ctxBg.lineWidth = 1;
+            for (let i = 0; i < bgNodes.length; i++) {
+                let n1 = bgNodes[i]; n1.pulse += 0.02;
+                if (bgMouse.x != null) {
+                    let dx = bgMouse.x - n1.x; let dy = bgMouse.y - n1.y; let dist = Math.hypot(dx, dy);
+                    if (dist < bgMouse.radius) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(bgMouse.x, bgMouse.y);
+                        ctxBg.strokeStyle = `rgba(178, 67, 56, ${0.8 - dist/bgMouse.radius})`; ctxBg.stroke();
+                        n1.x += dx * 0.005; n1.y += dy * 0.005;
+                    }
+                }
+                n1.x += n1.vx; n1.y += n1.vy;
+                if (n1.x < 0 || n1.x > canvasBg.width) n1.vx *= -1; if (n1.y < 0 || n1.y > canvasBg.height) n1.vy *= -1;
+                for (let j = i + 1; j < bgNodes.length; j++) {
+                    let n2 = bgNodes[j]; let dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+                    if (dist < 150) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(n2.x, n2.y);
+                        ctxBg.strokeStyle = `rgba(75, 73, 64, ${0.3 * (1 - dist/150)})`; ctxBg.stroke();
+                    }
+                }
+                ctxBg.beginPath(); ctxBg.arc(n1.x, n1.y, 2 + Math.sin(n1.pulse), 0, Math.PI*2);
+                ctxBg.fillStyle = '#4b4940'; ctxBg.fill();
+            }
+            requestAnimationFrame(animateBg);
+        }
+        window.addEventListener('resize', resizeBg); resizeBg(); animateBg();
+    </script>
+
+    <script>
+        const cvsB = document.getElementById('bridge-canvas');
+        const ctxB = cvsB.getContext('2d');
+        const termB = document.getElementById('bridge-terminal');
+
+        let bState = {
+            bridgeActive: false,
+            time: 0
+        };
+
+        let loraNodes = [];
+        let lanClients = [];
+        let activeBPackets = [];
+
+        function logB(msg, type="log-sys") {
+            const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+            termB.innerHTML += `<span class="${type}">[${time}] ${msg}</span>`;
+            termB.scrollTop = termB.scrollHeight;
+        }
+
+        function resizeB() {
+            const rect = cvsB.parentElement.getBoundingClientRect();
+            cvsB.width = rect.width;
+            cvsB.height = rect.height;
+            initBNetwork();
+        }
+
+        function initBNetwork() {
+            loraNodes = [];
+            lanClients = [];
+            activeBPackets = [];
+
+            // Левая часть (LoRa эфир)
+            for(let i=0; i<8; i++) {
+                loraNodes.push({
+                    x: Math.random() * (cvsB.width * 0.4) + 20,
+                    y: Math.random() * (cvsB.height - 40) + 20,
+                    pulse: Math.random() * Math.PI*2
+                });
+            }
+
+            // Правая часть (LAN Клиенты)
+            for(let i=0; i<4; i++) {
+                lanClients.push({
+                    x: cvsB.width * 0.85,
+                    y: (cvsB.height / 5) * (i + 1)
+                });
+            }
+        }
+
+        function toggleBridge() {
+            bState.bridgeActive = !bState.bridgeActive;
+            const btn = document.getElementById('btn-bridge');
+            if(bState.bridgeActive) {
+                btn.className = "btn-sim active-btn";
+                btn.innerText = "ОТКЛЮЧИТЬ MQTT-ШЛЮЗ";
+                logB("Открытие Serial-порта...", "log-bridge");
+                logB("MQTT-Брокер (Mosquitto) запущен. Подписка на 'msh/EU_868/#'", "log-sys");
+                logB("Python-мост Matrix -> MQTT установлен.", "log-sys");
+            } else {
+                btn.className = "btn-sim";
+                btn.innerText = "ВКЛЮЧИТЬ MQTT-ШЛЮЗ";
+                logB("Остановка демона-маршрутизатора.", "log-bridge");
+                logB("Среды (LoRa и LAN) физически изолированы.", "log-err");
+            }
+        }
+
+        // Отправка из автономной сети
+        function sendFromLoRa() {
+            let sender = loraNodes[Math.floor(Math.random() * loraNodes.length)];
+            logB("[LoRa] Радио-пакет пойман приемником шлюза.", "log-lora");
+            
+            // Пакет летит к центру
+            activeBPackets.push({
+                x: sender.x, y: sender.y,
+                targetX: cvsB.width / 2 - 40, targetY: cvsB.height / 2,
+                type: 'lora_to_gateway', progress: 0, speed: 0.02
+            });
+        }
+
+        // Отправка из ПК
+        function sendFromLAN() {
+            let sender = lanClients[Math.floor(Math.random() * lanClients.length)];
+            logB("[LAN] Отправка сообщения из Matrix-клиента.", "log-lan");
+            
+            activeBPackets.push({
+                x: sender.x, y: sender.y,
+                targetX: cvsB.width / 2 + 40, targetY: cvsB.height / 2,
+                type: 'lan_to_gateway', progress: 0, speed: 0.05 // Быстрее, т.к. оптика
+            });
+        }
+
+        function renderBridge() {
+            ctxB.clearRect(0, 0, cvsB.width, cvsB.height);
+            bState.time++;
+
+            let cx = cvsB.width / 2;
+            let cy = cvsB.height / 2;
+
+            // Разделение сред (Фон)
+            ctxB.fillStyle = 'rgba(235, 203, 139, 0.02)'; // Желтоватый радиоэфир
+            ctxB.fillRect(0, 0, cx, cvsB.height);
+            ctxB.fillStyle = 'rgba(163, 190, 140, 0.02)'; // Зеленоватый LAN
+            ctxB.fillRect(cx, 0, cx, cvsB.height);
+
+            // Линия барьера
+            ctxB.strokeStyle = '#4b4940'; ctxB.lineWidth = 2; ctxB.setLineDash([5, 5]);
+            ctxB.beginPath(); ctxB.moveTo(cx, 0); ctxB.lineTo(cx, cvsB.height); ctxB.stroke(); ctxB.setLineDash([]);
+            
+            ctxB.fillStyle = '#ebcb8b'; ctxB.font = '12px monospace'; ctxB.fillText("LORA MESH (PHY)", 20, 30);
+            ctxB.fillStyle = '#a3be8c'; ctxB.textAlign = 'right'; ctxB.fillText("TCP/IP LAN (OPTIC)", cvsB.width - 20, 30);
+            ctxB.textAlign = 'left';
+
+            // Отрисовка LoRa нод (Слева)
+            loraNodes.forEach(n => {
+                n.y += Math.sin(bState.time * 0.05 + n.pulse) * 0.5; // Легкое плавание
+                ctxB.beginPath(); ctxB.arc(n.x, n.y, 5, 0, Math.PI*2);
+                ctxB.fillStyle = '#ebcb8b'; ctxB.fill();
+                // Радиоволны
+                let r = (bState.time * 0.5 + n.pulse*20) % 40;
+                ctxB.beginPath(); ctxB.arc(n.x, n.y, r, 0, Math.PI*2);
+                ctxB.strokeStyle = `rgba(235, 203, 139, ${1 - r/40})`; ctxB.stroke();
+            });
+
+            // Отрисовка LAN клиентов (Справа)
+            lanClients.forEach(c => {
+                // Линии в коммутатор
+                ctxB.beginPath(); ctxB.moveTo(c.x, c.y); ctxB.lineTo(cx + 40, cy);
+                ctxB.strokeStyle = 'rgba(163, 190, 140, 0.2)'; ctxB.stroke();
+                
+                // Иконка ПК
+                ctxB.fillStyle = '#a3be8c'; ctxB.fillRect(c.x - 10, c.y - 8, 20, 16);
+                ctxB.fillStyle = '#1a1a17'; ctxB.fillRect(c.x - 8, c.y - 6, 16, 12);
+            });
+
+            // ШЛЮЗ (По центру)
+            // Радиомодуль (Левая часть шлюза)
+            ctxB.fillStyle = '#ebcb8b'; ctxB.fillRect(cx - 50, cy - 20, 40, 40);
+            ctxB.fillStyle = '#1a1a17'; ctxB.fillRect(cx - 45, cy - 15, 30, 30);
+            ctxB.fillStyle = '#ebcb8b'; ctxB.fillText("RF", cx - 40, cy + 5);
+            
+            // Raspberry Pi / Сервер (Правая часть шлюза)
+            ctxB.fillStyle = '#a3be8c'; ctxB.fillRect(cx + 10, cy - 20, 40, 40);
+            ctxB.fillStyle = '#1a1a17'; ctxB.fillRect(cx + 15, cy - 15, 30, 30);
+            ctxB.fillStyle = '#a3be8c'; ctxB.fillText("SBC", cx + 20, cy + 5);
+
+            // USB Кабель между ними
+            ctxB.beginPath(); ctxB.moveTo(cx - 10, cy); ctxB.lineTo(cx + 10, cy);
+            ctxB.strokeStyle = bState.bridgeActive ? '#cdc8b0' : '#b24338';
+            ctxB.lineWidth = 4; ctxB.stroke();
+
+            // Логика пакетов
+            for(let i = activeBPackets.length - 1; i >= 0; i--) {
+                let p = activeBPackets[i];
+                p.progress += p.speed;
+
+                let curX = p.x + (p.targetX - p.x) * p.progress;
+                let curY = p.y + (p.targetY - p.y) * p.progress;
+
+                if(p.progress >= 1) {
+                    if(p.type === 'lora_to_gateway') {
+                        if(bState.bridgeActive) {
+                            logB("[МОСТ] Конвертация Protobuf -> JSON. Публикация в MQTT.", "log-bridge");
+                            let dest = lanClients[Math.floor(Math.random() * lanClients.length)];
+                            activeBPackets.push({ x: cx + 40, y: cy, targetX: dest.x, targetY: dest.y, type: 'gateway_to_lan', progress: 0, speed: 0.08 });
+                        } else {
+                            logB("[DROP] Пакет отброшен. Связь с брокером разорвана.", "log-err");
+                            // Искры смерти
+                            ctxB.fillStyle = '#b24338'; ctxB.fillRect(cx - 20, cy - 5, 10, 10);
+                        }
+                    } else if(p.type === 'lan_to_gateway') {
+                        if(bState.bridgeActive) {
+                            logB("[МОСТ] Перехват из Matrix. Сериализация в Protobuf. Отправка в эфир.", "log-bridge");
+                            let dest = loraNodes[Math.floor(Math.random() * loraNodes.length)];
+                            activeBPackets.push({ x: cx - 40, y: cy, targetX: dest.x, targetY: dest.y, type: 'gateway_to_lora', progress: 0, speed: 0.02 });
+                        } else {
+                            logB("[DROP] Сервер недоступен. Сообщение не покинуло интранет.", "log-err");
+                            ctxB.fillStyle = '#b24338'; ctxB.fillRect(cx + 10, cy - 5, 10, 10);
+                        }
+                    } else if(p.type === 'gateway_to_lan') {
+                        logB("[LAN] Сообщение доставлено на ПК (Matrix Client).", "log-ok");
+                    } else if(p.type === 'gateway_to_lora') {
+                        logB("[LoRa] Пакет передан в радиоэфир и получен автономным узлом.", "log-ok");
+                        // Вспышка приема на узле
+                        ctxB.beginPath(); ctxB.arc(p.targetX, p.targetY, 15, 0, Math.PI*2);
+                        ctxB.fillStyle = 'rgba(235, 203, 139, 0.5)'; ctxB.fill();
+                    }
+                    activeBPackets.splice(i, 1);
+                } else {
+                    // Отрисовка полета
+                    ctxB.beginPath(); ctxB.arc(curX, curY, 4, 0, Math.PI*2);
+                    if(p.type.includes('lora')) {
+                        ctxB.fillStyle = '#ebcb8b'; // Желтые радиопакеты
+                        ctxB.shadowBlur = 10; ctxB.shadowColor = '#ebcb8b';
+                    } else {
+                        ctxB.fillStyle = '#a3be8c'; // Зеленые LAN пакеты (прямоугольники для TCP)
+                        ctxB.fillRect(curX - 4, curY - 4, 8, 8);
+                        ctxB.shadowBlur = 10; ctxB.shadowColor = '#a3be8c';
+                    }
+                    ctxB.fill(); ctxB.shadowBlur = 0;
+                }
+            }
+
+            requestAnimationFrame(renderBridge);
+        }
+
+        window.addEventListener('load', () => { resizeB(); renderBridge(); });
+        window.addEventListener('resize', resizeB);
+    </script>
+</body>
+</html>

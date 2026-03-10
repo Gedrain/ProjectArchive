@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 02 // ИЛЛЮЗИЯ АВТОНОМНОСТИ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none; /* Пропускаем клики к фону */
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+
+        .schematic-box {
+            background: var(--terminal-bg);
+            border: 2px dashed #88c0d0;
+            padding: 20px;
+            margin: 30px 0;
+            font-family: var(--font-mono);
+            color: #88c0d0;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'CRITICAL_ANALYSIS';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 800px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-sim {
+            background: transparent;
+            color: var(--bg-base);
+            border: 2px solid var(--bg-base);
+            padding: 8px 20px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-sim:hover { background: var(--bg-base); color: var(--text-main); }
+        
+        .btn-sim.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-sim.danger:hover { background: var(--accent-red); color: #fff; }
+        
+        .btn-sim.sigint { border-color: #ebcb8b; color: #ebcb8b; }
+        .btn-sim.sigint:hover { background: #ebcb8b; color: #000; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100% - 60px);
+        }
+
+        #sat-canvas {
+            width: 100%; height: 100%;
+            /* Ночное небо для космоса */
+            background: radial-gradient(circle at center bottom, #111424 0%, #05060a 100%);
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: #a8a38f;
+            overflow-y: auto;
+            background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; text-shadow: 0 0 8px rgba(178,67,56,0.6); }
+        .log-sys { color: #88c0d0; }
+        .log-warn { color: #ebcb8b; font-weight: bold; }
+        .log-ok { color: #a3be8c; }
+        .log-time { color: #555; font-size: 0.8rem; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html" class="active">ГЛ_02</a>
+            <a href="chapter3.html">ГЛ_03</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_02 ]</span>
+            <h1 class="chapter-title">Иллюзия Спутников</h1>
+        </div>
+
+        <div class="quote-block">
+            Существует опасное заблуждение, что терминалы Starlink или Iridium обеспечивают абсолютную независимость. При детальном архитектурном анализе становится очевидно: они не уничтожают "единую точку отказа", а лишь переносят её на орбиту Земли и серверы транснациональных корпораций, добавляя уязвимость к военным системам пеленгации.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>2.1. Зеркальная Архитектура</h3>
+                    <p>Любая коммерческая спутниковая система — это глубоко централизованная инфраструктура. Спутники LEO (Low Earth Orbit) в большинстве своем не маршрутизируют трафик между собой в космосе. Они работают как гигантские зеркала (ретрансляторы "изгиба трубы"), отражающие сигнал от вашего терминала на огромную наземную станцию — <span class="tooltip" data-text="Шлюз оператора. Представляет собой поле параболических антенн, подключенных к магистральному оптическому интернету.">Gateway</span>.</p>
+                    
+                    
+                    
+                    <p>Если магистральный провайдер обесточит этот Gateway на земле, вся группировка спутников над этим регионом станет бесполезной. Два терминала, стоящие в 10 метрах друг от друга, не смогут обменяться даже байтом данных без подключения к серверам корпорации.</p>
+                </div>
+
+                <div class="text-block">
+                    <h3>2.2. Аппаратный Геофенсинг (Kill-Switch)</h3>
+                    <p>Спутниковая связь — это не покупка оборудования, это аренда права на передачу данных. Уязвимости:</p>
+                    <ul>
+                        <li><strong>Биллинговая блокировка:</strong> Если сервер корпорации не подтвердит оплату, терминал аппаратно заблокирует передачу данных на уровне модема.</li>
+                        <li><strong>Геофенсинг:</strong> В каждый терминал встроен модуль GPS. Оператор может обвести зону на карте в панели управления. Как только терминал определит, что находится в этой зоне, он аппаратно <span class="tooltip" data-text="Принудительное отключение излучателя (TX) программной командой, зашитой в базовую прошивку устройства.">отключит трансивер</span>. Никакие VPN от этого не спасут.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">2.3. Эффект "Маяка" и РЭБ</h3>
+                    <p>Для пробивания радиоволной тропосферы Земли и осадков требуются колоссальные мощности. Терминалы используют <span class="tooltip" data-text="Фазированная антенная решетка — массив сотен мелких антенн, который электронным способом формирует узконаправленный сверхмощный луч.">ФАР</span>, работающие в Ku/Ka-диапазонах (от 12 до 30 ГГц).</p>
+                    
+                    
+
+                    <div class="schematic-box" style="border-color: var(--accent-red); color: var(--bg-base);">
+                        [ TDOA Triangulation ]<br>
+                        Time Difference of Arrival = (d1 - d2) / c
+                    </div>
+
+                    <p>В радиодиапазоне включенный терминал можно сравнить с зенитным прожектором, бьющим в небо темной ночью. Военные системы радиоэлектронной разведки (<span class="tooltip" data-text="Signals Intelligence. Глобальные системы перехвата и анализа радиоизлучений.">SIGINT</span>) легко пеленгуют такие устройства.</p>
+                    <p>Используя метод TDOA (разность времени прибытия сигнала на разные станции), системы SIGINT вычисляют точные координаты абонентского терминала с погрешностью до нескольких метров за считанные секунды.</p>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: СОЗВЕЗДИЕ И ПЕЛЕНГАЦИЯ ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ДЕМОНСТРАЦИЯ: Моделирование LEO-созвездия. Включите терминал, чтобы оценить алгоритм переключения спутников, и активируйте SIGINT, чтобы увидеть скорость пеленгации вашей позиции.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>СИМУЛЯЦИЯ LEO СЕТИ // Ku-BAND 14GHz</span>
+                        <div class="sim-controls">
+                            <button class="btn-sim" id="btn-uplink" onclick="toggleUplink()">УСТАНОВИТЬ UPLINK</button>
+                            <button class="btn-sim sigint" id="btn-sigint" onclick="toggleSigint()">СИСТЕМЫ SIGINT</button>
+                            <button class="btn-sim danger" id="btn-kill" onclick="triggerKillSwitch()">KILL-SWITCH</button>
+                        </div>
+                    </div>
+                    <div class="sim-body">
+                        <canvas id="sat-canvas"></canvas>
+                        
+                        <div class="sim-terminal" id="sat-terminal">
+                            <span><span class="log-time">00:00:01</span><span class="log-sys">[СИСТЕМА] Орбитальная группировка (Constellation) загружена.</span></span>
+                            <span><span class="log-time">00:00:02</span><span class="log-ok">[СИСТЕМА] Наземный Gateway оператора On-Line.</span></span>
+                            <span><span class="log-time">00:00:03</span><span class="log-warn">[ТЕРМИНАЛ] Режим ожидания. Излучение отключено.</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script>
+        const canvasBg = document.getElementById('home-canvas');
+        const ctxBg = canvasBg.getContext('2d');
+        let bgNodes = [];
+        let bgMouse = { x: null, y: null, radius: 150 };
+
+        function resizeBg() {
+            canvasBg.width = window.innerWidth;
+            canvasBg.height = window.innerHeight;
+            initBgNetwork();
+        }
+
+        window.addEventListener('mousemove', (e) => { bgMouse.x = e.x; bgMouse.y = e.y; });
+        window.addEventListener('mouseout', () => { bgMouse.x = null; bgMouse.y = null; });
+
+        function initBgNetwork() {
+            bgNodes = [];
+            let numNodes = Math.floor((canvasBg.width * canvasBg.height) / 20000);
+            for (let i = 0; i < numNodes; i++) {
+                bgNodes.push({
+                    x: Math.random() * canvasBg.width,
+                    y: Math.random() * canvasBg.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function animateBg() {
+            ctxBg.clearRect(0, 0, canvasBg.width, canvasBg.height);
+            
+            ctxBg.lineWidth = 1;
+            for (let i = 0; i < bgNodes.length; i++) {
+                let n1 = bgNodes[i];
+                n1.pulse += 0.02;
+
+                if (bgMouse.x != null) {
+                    let dx = bgMouse.x - n1.x;
+                    let dy = bgMouse.y - n1.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist < bgMouse.radius) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(bgMouse.x, bgMouse.y);
+                        ctxBg.strokeStyle = `rgba(178, 67, 56, ${0.8 - dist/bgMouse.radius})`; 
+                        ctxBg.stroke();
+                        n1.x += dx * 0.005; n1.y += dy * 0.005;
+                    }
+                }
+
+                n1.x += n1.vx; n1.y += n1.vy;
+                if (n1.x < 0 || n1.x > canvasBg.width) n1.vx *= -1;
+                if (n1.y < 0 || n1.y > canvasBg.height) n1.vy *= -1;
+
+                for (let j = i + 1; j < bgNodes.length; j++) {
+                    let n2 = bgNodes[j];
+                    let dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+                    if (dist < 150) {
+                        ctxBg.beginPath(); ctxBg.moveTo(n1.x, n1.y); ctxBg.lineTo(n2.x, n2.y);
+                        ctxBg.strokeStyle = `rgba(75, 73, 64, ${0.3 * (1 - dist/150)})`;
+                        ctxBg.stroke();
+                    }
+                }
+
+                ctxBg.beginPath(); ctxBg.arc(n1.x, n1.y, 2 + Math.sin(n1.pulse), 0, Math.PI*2);
+                ctxBg.fillStyle = '#4b4940'; ctxBg.fill();
+            }
+            requestAnimationFrame(animateBg);
+        }
+        window.addEventListener('resize', resizeBg);
+        resizeBg();
+        animateBg();
+    </script>
+
+    <script>
+        const canvasSat = document.getElementById('sat-canvas');
+        const ctxSat = canvasSat.getContext('2d');
+        const termSat = document.getElementById('sat-terminal');
+
+        let state = {
+            uplink: false, sigint: false, killed: false,
+            time: 0, activeSat: null, triangulationProgress: 0
+        };
+
+        const earthY = 650;
+        const gateway = { x: 0, y: earthY - 20 };
+        const terminalObj = { x: 0, y: earthY - 15 };
+        const sigintBases = [];
+        const satellites = [];
+        const stars = []; // Массив для звездного неба
+
+        function padZero(num) { return num < 10 ? '0'+num : num; }
+        function getSimTime() {
+            let m = Math.floor(state.time / 3600);
+            let s = Math.floor((state.time % 3600) / 60);
+            let ms = state.time % 60;
+            return `${padZero(m)}:${padZero(s)}:${padZero(ms)}`;
+        }
+        
+        function logSat(msg, type="log-sys") {
+            termSat.innerHTML += `<span><span class="log-time">${getSimTime()}</span><span class="${type}">${msg}</span></span>`;
+            termSat.scrollTop = termSat.scrollHeight;
+        }
+
+        function initSimulation() {
+            const rect = canvasSat.parentElement.getBoundingClientRect();
+            canvasSat.width = rect.width;
+            canvasSat.height = rect.height;
+
+            gateway.x = canvasSat.width * 0.15;
+            terminalObj.x = canvasSat.width * 0.8;
+
+            sigintBases.length = 0;
+            sigintBases.push({ x: canvasSat.width * 0.6, y: earthY, angle: 0 });
+            sigintBases.push({ x: canvasSat.width * 0.95, y: earthY, angle: 0 });
+
+            satellites.length = 0;
+            for(let i=0; i<6; i++) {
+                satellites.push({
+                    x: (canvasSat.width / 6) * i,
+                    y: 100 + Math.sin(i)*30,
+                    speed: 1.2 + Math.random()*0.4,
+                    id: 1000 + i
+                });
+            }
+
+            // Генерируем звездное небо
+            stars.length = 0;
+            for(let i=0; i<150; i++) {
+                stars.push({
+                    x: Math.random() * canvasSat.width,
+                    y: Math.random() * earthY,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random(),
+                    blinkSpeed: Math.random() * 0.05
+                });
+            }
+        }
+
+        function toggleUplink() {
+            if(state.killed) {
+                logSat("ОШИБКА: Терминал аппаратно заблокирован. (Geofence Lock)", "log-err");
+                return;
+            }
+            state.uplink = !state.uplink;
+            const btn = document.getElementById('btn-uplink');
+            
+            if(state.uplink) {
+                btn.style.background = "#cdc8b0"; btn.style.color = "#1a1a17"; btn.innerText = "РАЗОРВАТЬ UPLINK";
+                logSat("Запуск Фазированной Антенной Решетки (ФАР)...", "log-sys");
+                logSat("Uplink 14GHz установлен. Поиск оптимального спутника.", "log-ok");
+            } else {
+                btn.style.background = "transparent"; btn.style.color = "#cdc8b0"; btn.innerText = "УСТАНОВИТЬ UPLINK";
+                logSat("Излучение прекращено. Терминал переведен в Stealth-режим.", "log-warn");
+                state.activeSat = null;
+                state.triangulationProgress = 0;
+            }
+        }
+
+        function toggleSigint() {
+            state.sigint = !state.sigint;
+            const btn = document.getElementById('btn-sigint');
+            if(state.sigint) {
+                btn.style.background = "#ebcb8b"; btn.style.color = "#000";
+                logSat("ВНИМАНИЕ: Комплексы РЭБ/SIGINT противника выведены на боевое дежурство.", "log-warn");
+                logSat("Сканирование эфира в Ku-диапазоне...", "log-warn");
+            } else {
+                btn.style.background = "transparent"; btn.style.color = "#ebcb8b";
+                logSat("Системы SIGINT отключены.", "log-sys");
+                state.triangulationProgress = 0;
+            }
+        }
+
+        function triggerKillSwitch() {
+            if(state.killed) {
+                state.killed = false;
+                document.getElementById('btn-kill').innerText = "KILL-SWITCH";
+                logSat("Блокировка снята. Терминал авторизован биллингом.", "log-ok");
+            } else {
+                state.killed = true;
+                state.uplink = false;
+                document.getElementById('btn-kill').innerText = "СНЯТЬ БЛОКИРОВКУ";
+                document.getElementById('btn-uplink').style.background = "transparent"; 
+                document.getElementById('btn-uplink').style.color = "#cdc8b0"; 
+                document.getElementById('btn-uplink').innerText = "УСТАНОВИТЬ UPLINK";
+                
+                logSat("КОМАНДА ОПЕРАТОРА: Принудительный сброс регистрации.", "log-err");
+                logSat("Активирован Geofencing. Зона помечена как запрещенная.", "log-err");
+                state.activeSat = null;
+                state.triangulationProgress = 0;
+            }
+        }
+
+        function drawSat() {
+            ctxSat.clearRect(0, 0, canvasSat.width, canvasSat.height);
+            state.time++;
+
+            // 1. ЗВЕЗДНОЕ НЕБО (Космос)
+            stars.forEach(s => {
+                s.opacity += Math.sin(state.time * s.blinkSpeed) * 0.05;
+                if(s.opacity > 1) s.opacity = 1;
+                if(s.opacity < 0.2) s.opacity = 0.2;
+                ctxSat.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+                ctxSat.beginPath(); ctxSat.arc(s.x, s.y, s.size, 0, Math.PI*2); ctxSat.fill();
+            });
+
+            // 2. ЗЕМЛЯ И АТМОСФЕРА
+            // Атмосферное свечение
+            let grad = ctxSat.createLinearGradient(0, earthY - 50, 0, earthY);
+            grad.addColorStop(0, "transparent");
+            grad.addColorStop(1, "rgba(136, 192, 208, 0.2)");
+            ctxSat.fillStyle = grad;
+            ctxSat.fillRect(0, earthY - 50, canvasSat.width, 50);
+
+            // Твердая земля
+            ctxSat.fillStyle = '#1a1a17';
+            ctxSat.fillRect(0, earthY, canvasSat.width, canvasSat.height - earthY);
+            ctxSat.strokeStyle = '#4b4940'; ctxSat.lineWidth = 3;
+            ctxSat.beginPath(); ctxSat.moveTo(0, earthY); ctxSat.lineTo(canvasSat.width, earthY); ctxSat.stroke();
+
+            // 3. GATEWAY
+            ctxSat.fillStyle = '#cdc8b0';
+            ctxSat.fillRect(gateway.x - 30, gateway.y - 15, 60, 35);
+            ctxSat.beginPath(); ctxSat.arc(gateway.x, gateway.y - 15, 25, Math.PI, 0); ctxSat.fill();
+            ctxSat.fillStyle = '#1a1a17'; ctxSat.font = 'bold 12px monospace'; ctxSat.textAlign = 'center';
+            ctxSat.fillText("GATEWAY", gateway.x, gateway.y + 10);
+
+            // 4. ТЕРМИНАЛ
+            ctxSat.fillStyle = state.killed ? '#b24338' : (state.uplink ? '#88c0d0' : '#b8b19e');
+            ctxSat.fillRect(terminalObj.x - 15, terminalObj.y - 5, 30, 20);
+            ctxSat.beginPath(); ctxSat.moveTo(terminalObj.x - 20, terminalObj.y - 5); 
+            ctxSat.lineTo(terminalObj.x + 20, terminalObj.y - 5); ctxSat.lineTo(terminalObj.x, terminalObj.y - 20); ctxSat.fill();
+            ctxSat.fillStyle = '#cdc8b0';
+            ctxSat.fillText("USER", terminalObj.x, terminalObj.y + 30);
+
+            // Геофенсинг (Купол)
+            if(state.killed) {
+                ctxSat.beginPath(); ctxSat.arc(terminalObj.x, earthY, 60, Math.PI, 0);
+                ctxSat.fillStyle = 'rgba(178, 67, 56, 0.2)'; ctxSat.fill();
+                ctxSat.strokeStyle = '#b24338'; ctxSat.lineWidth = 2; ctxSat.setLineDash([10, 5]); ctxSat.stroke();
+                ctxSat.setLineDash([]);
+                ctxSat.fillStyle = '#b24338'; ctxSat.fillText("GEOFENCE BLOCKED", terminalObj.x, terminalObj.y - 70);
+            }
+
+            // 5. СПУТНИКИ И МАРШРУТИЗАЦИЯ
+            let nearestDist = Infinity;
+            let bestSat = null;
+
+            satellites.forEach(sat => {
+                sat.x += sat.speed;
+                if(sat.x > canvasSat.width + 100) sat.x = -100; 
+
+                // Рисуем спутник
+                ctxSat.fillStyle = '#b8b19e'; ctxSat.fillRect(sat.x - 15, sat.y - 5, 30, 10);
+                ctxSat.fillStyle = '#88c0d0'; ctxSat.fillRect(sat.x - 35, sat.y - 2, 20, 4); ctxSat.fillRect(sat.x + 15, sat.y - 2, 20, 4);
+                
+                let distToTerminal = Math.hypot(sat.x - terminalObj.x, sat.y - terminalObj.y);
+                let canSeeGateway = sat.x > 0 && sat.x < canvasSat.width;
+
+                if(state.uplink && canSeeGateway && distToTerminal < nearestDist) {
+                    nearestDist = distToTerminal;
+                    bestSat = sat;
+                }
+            });
+
+            // Hand-off логика
+            if(state.uplink && bestSat) {
+                if(state.activeSat !== bestSat) {
+                    state.activeSat = bestSat;
+                    logSat(`Hand-off: Переключение на спутник SAT-${bestSat.id}`, "log-sys");
+                }
+
+                // Луч до спутника
+                ctxSat.beginPath(); ctxSat.moveTo(terminalObj.x, terminalObj.y - 20); ctxSat.lineTo(bestSat.x, bestSat.y);
+                ctxSat.strokeStyle = '#88c0d0'; ctxSat.lineWidth = 3; ctxSat.setLineDash([10, 10]); ctxSat.stroke();
+
+                // Луч от спутника к Gateway
+                ctxSat.beginPath(); ctxSat.moveTo(bestSat.x, bestSat.y); ctxSat.lineTo(gateway.x, gateway.y - 15);
+                ctxSat.strokeStyle = 'rgba(205, 200, 176, 0.5)'; ctxSat.lineWidth = 2; ctxSat.stroke();
+                ctxSat.setLineDash([]);
+
+                // Радио-круги (Маяк)
+                let waveR = (state.time % 60) * 5;
+                ctxSat.beginPath(); ctxSat.arc(terminalObj.x, terminalObj.y - 20, waveR, Math.PI, 0);
+                ctxSat.strokeStyle = `rgba(136, 192, 208, ${1 - waveR/300})`; ctxSat.lineWidth = 2; ctxSat.stroke();
+            }
+
+            // 6. СИСТЕМЫ SIGINT
+            if(state.sigint) {
+                let allLocked = true;
+
+                sigintBases.forEach((base, i) => {
+                    ctxSat.fillStyle = '#b24338';
+                    ctxSat.beginPath(); ctxSat.moveTo(base.x - 10, base.y); ctxSat.lineTo(base.x + 10, base.y); ctxSat.lineTo(base.x, base.y - 30); ctxSat.fill();
+                    
+                    if(state.uplink) {
+                        let targetAngle = Math.atan2((terminalObj.y - 20) - (base.y - 30), terminalObj.x - base.x);
+                        let angleDiff = targetAngle - base.angle;
+                        base.angle += angleDiff * 0.05;
+
+                        ctxSat.beginPath();
+                        ctxSat.moveTo(base.x, base.y - 30);
+                        ctxSat.arc(base.x, base.y - 30, canvasSat.width, base.angle - 0.1, base.angle + 0.1);
+                        ctxSat.lineTo(base.x, base.y - 30);
+                        ctxSat.fillStyle = 'rgba(178, 67, 56, 0.15)'; ctxSat.fill();
+
+                        if(Math.abs(angleDiff) < 0.1) {
+                            ctxSat.beginPath(); ctxSat.moveTo(base.x, base.y - 30); ctxSat.lineTo(terminalObj.x, terminalObj.y - 20);
+                            ctxSat.strokeStyle = '#b24338'; ctxSat.lineWidth = 1; ctxSat.stroke();
+                        } else {
+                            allLocked = false;
+                        }
+                    } else {
+                        base.angle = Math.PI + Math.sin(state.time * 0.02 + i) * 0.5;
+                        ctxSat.beginPath();
+                        ctxSat.moveTo(base.x, base.y - 30);
+                        ctxSat.arc(base.x, base.y - 30, 300, base.angle - 0.2, base.angle + 0.2);
+                        ctxSat.fillStyle = 'rgba(235, 203, 139, 0.1)'; ctxSat.fill();
+                        allLocked = false;
+                    }
+                });
+
+                if(state.uplink && allLocked) {
+                    state.triangulationProgress++;
+                    if(state.triangulationProgress === 60) {
+                        logSat("КРИТИЧЕСКАЯ ОПАСНОСТЬ: Системы SIGINT вычислили точные координаты (TDOA).", "log-err");
+                    }
+                    if(state.triangulationProgress > 60) {
+                        ctxSat.beginPath(); ctxSat.arc(terminalObj.x, terminalObj.y - 20, 25, 0, Math.PI*2);
+                        ctxSat.strokeStyle = '#b24338'; ctxSat.lineWidth = 3; ctxSat.stroke();
+                        ctxSat.beginPath(); ctxSat.moveTo(terminalObj.x - 35, terminalObj.y - 20); ctxSat.lineTo(terminalObj.x + 35, terminalObj.y - 20);
+                        ctxSat.moveTo(terminalObj.x, terminalObj.y - 55); ctxSat.lineTo(terminalObj.x, terminalObj.y + 15); ctxSat.stroke();
+                        ctxSat.fillStyle = '#b24338'; ctxSat.fillText("TARGET LOCKED", terminalObj.x, terminalObj.y - 65);
+                    }
+                } else {
+                    state.triangulationProgress = 0;
+                }
+            }
+
+            requestAnimationFrame(drawSat);
+        }
+
+        window.addEventListener('load', () => {
+            initSimulation();
+            drawSat();
+        });
+        window.addEventListener('resize', initSimulation);
+    </script>
+</body>
+</html>

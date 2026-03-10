@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПРИЛОЖЕНИЯ И СХЕМЫ // АРХИВ МСР</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .appendix-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            margin-bottom: 60px;
+            position: relative;
+            pointer-events: auto;
+        }
+
+        .appendix-block h2 {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            color: var(--bg-base);
+            background: var(--text-main);
+            display: inline-block;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            margin-left: -40px;
+            text-transform: uppercase;
+            box-shadow: 5px 5px 0 var(--accent-red);
+        }
+
+        .appendix-block h3 {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            color: var(--accent-red);
+            margin-bottom: 20px;
+            border-bottom: 2px dashed var(--accent-red);
+            padding-bottom: 5px;
+        }
+
+        .appendix-block p, .appendix-block ul { margin-bottom: 20px; line-height: 1.7; text-align: justify;}
+        .appendix-block ul { margin-left: 20px; }
+        .appendix-block li { margin-bottom: 10px; }
+
+        /* Таблица Приложения А и В */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            background: var(--bg-base);
+        }
+        .data-table th, .data-table td {
+            border: 2px solid var(--border-dark);
+            padding: 15px;
+            vertical-align: top;
+        }
+        .data-table th {
+            background: var(--text-main);
+            color: var(--bg-base);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            text-align: left;
+        }
+        .data-table tr:nth-child(even) { background: rgba(75, 73, 64, 0.05); }
+        .data-table strong { color: var(--accent-red); }
+
+        /* Математические блоки */
+        .math-box {
+            background: var(--terminal-bg);
+            border: 2px solid #88c0d0;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: var(--font-mono);
+            color: #88c0d0;
+            font-size: 1.3rem;
+            text-align: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .math-desc {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            background: var(--bg-alt);
+            padding: 15px;
+            border-left: 4px solid #88c0d0;
+            margin-bottom: 30px;
+        }
+
+        /* Интерактивные панели */
+        .interactive-panel {
+            background: #1a1a17;
+            border: 4px solid var(--accent-red);
+            padding: 20px;
+            margin-top: 30px;
+            color: #cdc8b0;
+            font-family: var(--font-mono);
+        }
+        .interactive-header {
+            color: var(--accent-red); font-size: 1.2rem; font-weight: bold;
+            border-bottom: 2px dashed var(--accent-red); padding-bottom: 10px; margin-bottom: 20px;
+        }
+
+        /* Схема Canvas */
+        #wiring-canvas {
+            width: 100%;
+            height: 500px;
+            background: #0a0a0c;
+            border: 2px solid #4b4940;
+            display: block;
+            margin-bottom: 20px;
+            cursor: crosshair;
+        }
+
+        /* Фотография прототипа */
+        .photo-container {
+            border: 4px solid var(--text-main);
+            padding: 10px;
+            background: var(--bg-alt);
+            text-align: center;
+            box-shadow: 15px 15px 0 var(--border-dark);
+        }
+        .photo-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            filter: contrast(1.1) grayscale(0.2);
+        }
+        .photo-caption {
+            font-family: var(--font-mono);
+            font-weight: bold;
+            margin-top: 15px;
+            color: var(--accent-red);
+        }
+
+        .btn-link {
+            display: inline-block;
+            background: var(--accent-red);
+            color: var(--bg-base);
+            padding: 15px 30px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .btn-link:hover { background: var(--text-main); color: var(--bg-base); box-shadow: 5px 5px 0 var(--accent-red); }
+        
+        /* Ползунок */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px;
+            background: var(--accent-red); cursor: pointer; margin-top: -6px; border-radius: 0;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #4b4940;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+            <a href="appendices.html" class="active">ПРИЛОЖЕНИЯ</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_APP ]</span>
+            <h1 class="chapter-title">Приложения и Схемы</h1>
+        </div>
+
+        <div class="appendix-block">
+            <h2>Приложение А. Сравнительная характеристика</h2>
+            <p>Матрица сравнительного анализа средств автономной связи по ключевым векторам независимости.</p>
+            
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Критерий оценки</th>
+                            <th>Коммерческая сотовая связь (LTE/5G)</th>
+                            <th>Глобальные спутниковые системы (Starlink/Iridium)</th>
+                            <th>Профессиональная цифровая радиосвязь (DMR)</th>
+                            <th>Децентрализованные Mesh-сети (LoRa/Meshtastic)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Топология и Архитектура</strong></td>
+                            <td>Жесткая иерархия (Звезда). Тотальная централизация.</td>
+                            <td>Иерархическая (Звезда). Спутник — лишь ретранслятор до наземного шлюза (Gateway).</td>
+                            <td>Одноранговая (Р2Р) или через центральный ретранслятор (Repeater).</td>
+                            <td>Истинная ячеистая (Mesh). Каждый узел равен другому и является ретранслятором.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Зависимость от инфраструктуры (SPOF)</strong></td>
+                            <td>Абсолютная. Требует оптоволокна, серверов и электропитания. (Коллапс при блэкауте).</td>
+                            <td>Высокая. Полная зависимость от наземных станций корпорации и биллинга.</td>
+                            <td>Нулевая. Работает напрямую между рациями.</td>
+                            <td>Нулевая. Инфраструктуру создают сами устройства в момент включения.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Энергопотребление и автономность</strong></td>
+                            <td>Базовая станция: 1-10 кВт. Требует генераторов.</td>
+                            <td>Терминал: от 15 Вт до 100 Вт. Нужен мощный источник питания.</td>
+                            <td>Трансивер: 5-10 Вт в режиме передачи. Быстрый разряд батареи.</td>
+                            <td>Узел: 0.1 Вт (ТХ), микроамперы в покое. Работает от 1 аккумулятора (18650) неделями.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Финансовая независимость</strong></td>
+                            <td>Абонентская плата. Блокировка при нулевом балансе.</td>
+                            <td>Астрономическая стоимость оборудования + тарифы. Удаленный Kill-Switch.</td>
+                            <td>Единоразовая покупка оборудования. Связь бесплатна.</td>
+                            <td>Сборка от 3000 руб (чипы ESP32/nRF). Открытое ПО. Связь абсолютно бесплатна.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Криптография и безопасность</strong></td>
+                            <td>Е2EE в мессенджерах нивелируется сбором метаданных.</td>
+                            <td>Закрытые проприетарные протоколы. Перехват оператором.</td>
+                            <td>Алгоритмы AES-256 (в дорогих моделях), но нелегально.</td>
+                            <td>Открытая математика: AES-256 (CTR) + Curve25519 (ECDH).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Пеленгация (SIGINT/РЭБ)</strong></td>
+                            <td>Точная триангуляция по базовым станциям.</td>
+                            <td>Эффект «Светового маяка». Пеленгуется РЭБ за секунды.</td>
+                            <td>Низкая. Мощность 5-10 Вт легко пеленгуется (TDOA).</td>
+                            <td>К-Анонимность. Сигнал (100 мВт) тонет в шумах. Лавинный флудинг маскирует источник.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="appendix-block">
+            <h2>Приложение Б. Спектрограмма и Бюджет Канала</h2>
+            <p>Математическое обоснование феноменальной дальности технологии LoRa на базе уравнений Шеннона-Хартли и спецификаций трансиверов Semtech SX1262.</p>
+            
+            <h3>Б.1. Предельная чувствительность приемника (S)</h3>
+            <p>Вычислим теоретический предел чувствительности приемника SX1262 на пресете Very LongSlow (SF12, BW=62.5 кГц, SNR=-20 дБ):</p>
+            <div class="math-box">S = -174 + 10 * log10(BW) + NF + SNR</div>
+            <p class="math-desc">S = -174 + 10 * log10(62500) + 6 + (-20)<br>S ≈ -174 + 47.96 + 6 - 20 = <strong>-140.04 дБм</strong>. Это $10^{-17}$ Ватта — микроскопическая энергия, лежащая за пределами возможностей обычных раций.</p>
+
+            <h3>Б.2. Бюджет канала (Link Budget) и FSPL</h3>
+            <p>Максимально допустимые потери сигнала в пространстве (при Tx=22 дБм и антеннах по 5 dBi, с потерями кабеля 1 дБ):</p>
+            <div class="math-box">LB_max = P_tx + G_tx - L_tx + G_rx - L_rx - S</div>
+            <p class="math-desc">LB_max = 22 + 5 - 1 + 5 - 1 - (-140) = <strong>170 дБ</strong>.</p>
+            <p>Используя формулу затухания в свободном пространстве (FSPL), вычислим теоретическую дальность:</p>
+            <div class="math-box">FSPL = 32.44 + 20 * log10(f) + 20 * log10(d)</div>
+            
+            <div class="interactive-panel">
+                <div class="interactive-header">[ ИНТЕРАКТИВНЫЙ РАСЧЕТ: LINK BUDGET TO DISTANCE ]</div>
+                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+                    <label style="width: 150px;">Fade Margin (дБ):</label>
+                    <input type="range" id="fm-slider" min="0" max="60" value="15" oninput="calcLB()">
+                    <span id="fm-val" style="color: var(--accent-red); font-weight: bold; width: 150px;">15 дБ (Горы/LOS)</span>
+                </div>
+                <div id="lb-result" style="color: #a3be8c; font-size: 1.2rem;">
+                    Допустимые потери: 155 дБ. Теоретическая дальность: ~1546 км.
+                </div>
+                <script>
+                    function calcLB() {
+                        let fm = parseInt(document.getElementById('fm-slider').value);
+                        let type = fm < 20 ? "(Космос/Горы LOS)" : fm < 40 ? "(Лес/Пригород)" : "(Плотный город/Бетон)";
+                        document.getElementById('fm-val').innerText = fm + " дБ " + type;
+                        let targetLoss = 170 - fm;
+                        let d = Math.pow(10, (78.79 - fm) / 20);
+                        document.getElementById('lb-result').innerText = `Допустимые потери: ${targetLoss} дБ. Теоретическая дальность связи (d): ~${Math.floor(d)} км.`;
+                    }
+                </script>
+            </div>
+        </div>
+
+        <div class="appendix-block">
+            <h2>Приложение В. Электрическая схема узла</h2>
+            <p>Спецификация электрических подключений (Pin-to-Pin) и архитектурная схема автономного узла-ретранслятора (Router/Repeater) для работы 24/7/365.</p>
+            
+            <h3>В.1. Спецификация компонентов (BOM)</h3>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Обозначение</th>
+                            <th>Наименование</th>
+                            <th>Обоснование</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>SP1</strong></td><td>Солнечная панель 6V/10W</td><td>Напряжение холостого хода ~7.2V. Дает ток даже в плотную облачность.</td></tr>
+                        <tr><td><strong>U1</strong></td><td>Модуль MPPT (чип CN3791)</td><td>Настроен на 6V. Эффективность DC-DC до 94%.</td></tr>
+                        <tr><td><strong>U2</strong></td><td>Плата BMS 1S 3.2V (HY2112)</td><td>Отсечка по разряду: 2.0V, по перезаряду: 3.65V. Спасает батарею.</td></tr>
+                        <tr><td><strong>BAT1</strong></td><td>LiFePO4 сборка (32700)</td><td>Емкость 6000 мАч, 3.2V. Не взрывается. Работает от -30°C до +60°C.</td></tr>
+                        <tr><td><strong>MCU1</strong></td><td>RAK4631 (nRF52840 + SX1262)</td><td>Ток сна: 2 мкА. Аппаратная поддержка BLE 5.0 и LoRa 868 MHz.</td></tr>
+                        <tr><td><strong>BASE1</strong></td><td>RAK5005-0 (WisBlock Base)</td><td>Объединяет шины I2C/UART/GPIO.</td></tr>
+                        <tr><td><strong>ANT1</strong></td><td>Коллинеарная антенна (5.8 dBi)</td><td>Fiberglass. КСВ менее 1.2. Оптимизирована для диапазона ISM 868 MHz.</td></tr>
+                        <tr><td><strong>GDT1</strong></td><td>Модуль грозозащиты (Gas Tube)</td><td>Разрядник N-Type. Предотвращает выгорание трансивера от статики.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>В.2. Матрица подключений (Динамическая Интерактивная диаграмма)</h3>
+            <p>Наведите мышь на плату, чтобы увидеть логику соединений. Схема автоматически масштабируется под размер вашего экрана.</p>
+            
+            <canvas id="wiring-canvas"></canvas>
+
+            <h3>В.3. Аппаратная защита (Hardware Hardening)</h3>
+            <ul>
+                <li><strong>Роль Router:</strong> Узел на мачте является "слепым" ретранслятором. Приватные ключи на нем физически стерты.</li>
+                <li><strong>Отключение портов:</strong> Программное сжигание (fusing) eFuses для блокировки JTAG/SWD интерфейсов. Чтение памяти невозможно.</li>
+                <li><strong>Компаундирование (Tamper Destruct):</strong> Заливка плат изоляционным лаком (PLASTIK-71) или смолой. Попытка вскрытия разрушит кристалл.</li>
+            </ul>
+        </div>
+
+        <div class="appendix-block">
+            <h2>Приложение Г. Фотография прототипа</h2>
+            <p>Аппаратный комплекс в процессе отладки и прошивки базовых станций.</p>
+            <div class="photo-container">
+                <img src="1435.jpg" alt="Фотография аппаратного прототипа узла">
+                <div class="photo-caption">[ ФАЙЛ_1435.JPG // СБОРКА И ПРОШИВКА УЗЛОВ НА СТЕНДЕ ]</div>
+            </div>
+        </div>
+
+        <div class="appendix-block" style="border-color: var(--accent-red);">
+            <h2 style="background: var(--accent-red); color: var(--bg-base); box-shadow: 5px 5px 0 var(--text-main);">Приложение Д. Демонстрация сети</h2>
+            <p>Ознакомиться с интерактивной симуляцией работы Mesh-сети, алгоритмов маршрутизации и эмуляцией атак РЭБ можно на выделенном терминале.</p>
+            <p>Внешняя ссылка на веб-демонстрацию (указана в проекте): <a href="https://gedrain.github.io/Prilozenia-D/" style="color: #88c0d0; font-family: monospace;" target="_blank">https://gedrain.github.io/Prilozenia-D/</a></p>
+            
+            <a href="demo.html" class="btn-link">>> ЗАПУСТИТЬ ЛОКАЛЬНЫЙ ТЕРМИНАЛ СИМУЛЯЦИИ</a>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title" style="color: var(--bg-base);">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ФАЙЛА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const cvsW = document.getElementById('wiring-canvas');
+        const ctxW = cvsW.getContext('2d');
+        
+        let wTime = 0;
+        let wMouse = {x: 0, y: 0};
+        
+        let blocks = [];
+        let wires = [];
+
+        function resizeW() {
+            const rect = cvsW.parentElement.getBoundingClientRect();
+            cvsW.width = rect.width;
+            cvsW.height = rect.height; // У нас это 500px в CSS
+            
+            let cw = cvsW.width;
+            let ch = cvsW.height;
+            let cy = ch / 2; // Центр по вертикали
+            
+            // Динамически распределяем 6 основных блоков по ширине экрана
+            let step = cw / 6.5; 
+            
+            // Расчет позиций, чтобы схема занимала весь холст равномерно
+            blocks = [
+                { id: 'SP1', title: 'SOLAR 10W', x: step*0.5 - 60, y: cy - 60, w: 120, h: 120, color: '#1a1a17', border: '#eccc68', text: '#eccc68' },
+                { id: 'U1', title: 'MPPT CN3791', x: step*1.7 - 70, y: cy - 30, w: 140, h: 60, color: '#4b4940', border: '#cdc8b0', text: '#cdc8b0' },
+                { id: 'U2', title: 'BMS HY2112', x: step*2.8 - 60, y: cy - 30, w: 120, h: 60, color: '#4b4940', border: '#b24338', text: '#cdc8b0' },
+                { id: 'BAT1', title: 'LiFePO4 32700', x: step*2.8 - 60, y: cy + 50, w: 120, h: 80, color: '#1a1a17', border: '#a3be8c', text: '#a3be8c' },
+                { id: 'BASE', title: 'WisBlock Base', x: step*4.2 - 80, y: cy - 60, w: 160, h: 120, color: '#1a1a17', border: '#88c0d0', text: '#88c0d0' },
+                { id: 'MCU1', title: 'nRF52840 Core', x: step*4.2 - 60, y: cy - 40, w: 120, h: 40, color: '#88c0d0', border: 'transparent', text: '#1a1a17' },
+                { id: 'ANT1', title: 'ANTENNA 868', x: step*5.6 - 10, y: cy - 140, w: 20, h: 160, color: '#cdc8b0', border: '#cdc8b0', text: '#1a1a17' },
+                { id: 'GDT1', title: 'GDT', x: step*5.6 - 10, y: cy + 40, w: 20, h: 40, color: '#4b4940', border: '#b24338', text: '#cdc8b0' }
+            ];
+
+            // Динамический расчет линий (проводов) на основе позиций блоков
+            wires = [
+                // От Панели к MPPT
+                { x1: blocks[0].x+blocks[0].w, y1: cy - 10, x2: blocks[1].x, y2: cy - 10, color: '#b24338', label: 'VIN+' },
+                { x1: blocks[0].x+blocks[0].w, y1: cy + 10, x2: blocks[1].x, y2: cy + 10, color: '#4b4940', label: 'GND' },
+                
+                // От MPPT к BMS
+                { x1: blocks[1].x+blocks[1].w, y1: cy - 10, x2: blocks[2].x, y2: cy - 10, color: '#a3be8c', label: 'BAT+ -> P+' },
+                { x1: blocks[1].x+blocks[1].w, y1: cy + 10, x2: blocks[2].x, y2: cy + 10, color: '#4b4940', label: 'BAT- -> P-' },
+                
+                // От BMS вниз к Батарее
+                { x1: blocks[2].x+30, y1: blocks[2].y+blocks[2].h, x2: blocks[3].x+30, y2: blocks[3].y, color: '#b24338', label: 'B+' },
+                { x1: blocks[2].x+90, y1: blocks[2].y+blocks[2].h, x2: blocks[3].x+90, y2: blocks[3].y, color: '#4b4940', label: 'B-' },
+                
+                // От BMS к Материнской плате
+                { x1: blocks[2].x+blocks[2].w, y1: cy - 10, x2: blocks[4].x, y2: cy - 10, color: '#b24338', label: 'P+ -> VBAT' },
+                { x1: blocks[2].x+blocks[2].w, y1: cy + 10, x2: blocks[4].x, y2: cy + 10, color: '#4b4940', label: 'P- -> GND' },
+                
+                // От Модема к Грозозащите (RF)
+                { x1: blocks[5].x+blocks[5].w, y1: cy - 20, x2: blocks[7].x, y2: cy + 50, color: '#88c0d0', label: 'U.FL to SMA' },
+                
+                // От Грозозащиты к Земле
+                { x1: blocks[7].x+10, y1: blocks[7].y+blocks[7].h, x2: blocks[7].x+10, y2: blocks[7].y+blocks[7].h+40, color: '#ebcb8b', label: 'EARTH GND' },
+                // От Грозозащиты к Антенне
+                { x1: blocks[6].x+10, y1: blocks[6].y+blocks[6].h, x2: blocks[7].x+10, y2: blocks[7].y, color: '#88c0d0', label: 'RF' }
+            ];
+        }
+
+        cvsW.addEventListener('mousemove', (e) => {
+            const rect = cvsW.getBoundingClientRect();
+            wMouse.x = e.clientX - rect.left;
+            wMouse.y = e.clientY - rect.top;
+        });
+
+        function renderWiring() {
+            ctxW.clearRect(0, 0, cvsW.width, cvsW.height);
+            wTime++;
+
+            // Сетка фона (Матрица)
+            ctxW.strokeStyle = 'rgba(75, 73, 64, 0.2)'; ctxW.lineWidth = 1;
+            for(let i=0; i<cvsW.width; i+=25) { ctxW.beginPath(); ctxW.moveTo(i, 0); ctxW.lineTo(i, cvsW.height); ctxW.stroke(); }
+            for(let i=0; i<cvsW.height; i+=25) { ctxW.beginPath(); ctxW.moveTo(0, i); ctxW.lineTo(cvsW.width, i); ctxW.stroke(); }
+
+            // Отрисовка проводов
+            ctxW.lineWidth = 4;
+            wires.forEach(w => {
+                ctxW.strokeStyle = w.color;
+                ctxW.beginPath(); ctxW.moveTo(w.x1, w.y1); ctxW.lineTo(w.x2, w.y2); ctxW.stroke();
+                
+                // Подпись провода (по центру линии)
+                let mx = (w.x1 + w.x2)/2; let my = (w.y1 + w.y2)/2;
+                ctxW.fillStyle = '#cdc8b0'; ctxW.font = '11px monospace'; ctxW.textAlign = 'center';
+                
+                // Чтобы текст не сливался с проводом, рисуем подложку
+                let txtWidth = ctxW.measureText(w.label).width;
+                ctxW.fillStyle = 'rgba(10, 10, 12, 0.8)';
+                ctxW.fillRect(mx - txtWidth/2 - 2, my - 16, txtWidth + 4, 14);
+                
+                ctxW.fillStyle = '#cdc8b0';
+                ctxW.fillText(w.label, mx, my - 5);
+
+                // Бегущий ток (анимация пунктира)
+                ctxW.strokeStyle = 'rgba(255,255,255,0.7)';
+                ctxW.setLineDash([5, 15]);
+                ctxW.lineDashOffset = -wTime * 0.8; // Скорость бегущих электронов
+                ctxW.stroke();
+                ctxW.setLineDash([]);
+            });
+
+            // Отрисовка блоков
+            blocks.forEach(b => {
+                // Hover effect (Проверка, находится ли мышь над блоком)
+                let isHover = wMouse.x > b.x && wMouse.x < b.x+b.w && wMouse.y > b.y && wMouse.y < b.y+b.h;
+                
+                // Тело блока
+                ctxW.fillStyle = b.color;
+                ctxW.fillRect(b.x, b.y, b.w, b.h);
+                
+                // Обводка
+                ctxW.strokeStyle = isHover ? '#fff' : b.border;
+                ctxW.lineWidth = isHover ? 3 : 2;
+                ctxW.strokeRect(b.x, b.y, b.w, b.h);
+                
+                // Текст внутри блока
+                ctxW.fillStyle = b.text;
+                ctxW.font = 'bold 13px monospace';
+                ctxW.textAlign = 'center';
+                
+                // Если блок вертикальный (Антенна), рисуем текст иначе
+                if (b.w < 50) {
+                    ctxW.save();
+                    ctxW.translate(b.x + b.w/2, b.y + b.h/2);
+                    ctxW.rotate(-Math.PI/2);
+                    ctxW.fillText(b.title, 0, 4);
+                    ctxW.restore();
+                } else {
+                    ctxW.fillText(b.title, b.x + b.w/2, b.y + b.h/2 + 4);
+                }
+
+                // Интерактивная всплывающая подсказка при наведении
+                if(isHover) {
+                    ctxW.shadowBlur = 20; ctxW.shadowColor = b.border; 
+                    ctxW.strokeRect(b.x, b.y, b.w, b.h); 
+                    ctxW.shadowBlur = 0;
+                    
+                    ctxW.fillStyle = 'rgba(26,26,23,0.95)';
+                    ctxW.fillRect(wMouse.x + 15, wMouse.y - 35, 160, 45);
+                    ctxW.strokeStyle = b.border; ctxW.lineWidth = 1;
+                    ctxW.strokeRect(wMouse.x + 15, wMouse.y - 35, 160, 45);
+                    ctxW.fillStyle = '#cdc8b0'; ctxW.font = '11px monospace'; ctxW.textAlign = 'left';
+                    ctxW.fillText(`MODULE: ${b.id}`, wMouse.x + 25, wMouse.y - 20);
+                    ctxW.fillStyle = '#88c0d0';
+                    ctxW.fillText(`STATUS: ONLINE`, wMouse.x + 25, wMouse.y - 5);
+                }
+            });
+
+            // Анимация излучения радиоволн вокруг антенны
+            let ant = blocks.find(b => b.id === 'ANT1');
+            let waveR = (wTime % 60) * 3;
+            ctxW.beginPath(); ctxW.arc(ant.x + ant.w/2, ant.y + 20, waveR, 0, Math.PI*2);
+            ctxW.strokeStyle = `rgba(136, 192, 208, ${1 - waveR/180})`;
+            ctxW.lineWidth = 2; ctxW.stroke();
+
+            requestAnimationFrame(renderWiring);
+        }
+
+        window.addEventListener('load', () => { 
+            resizeW(); 
+            renderWiring(); 
+        });
+        window.addEventListener('resize', resizeW);
+    </script>
+</body>
+</html>

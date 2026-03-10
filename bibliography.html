@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СПИСОК ЛИТЕРАТУРЫ // АРХИВ МСР</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 30px;
+            font-family: var(--font-mono);
+            font-size: 1.15rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+            box-shadow: 15px 15px 0 rgba(178, 67, 56, 0.2);
+        }
+        
+        .quote-block::before {
+            content: 'REFERENCES_DB';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        /* ИНТЕРАКТИВНАЯ БИБЛИОГРАФИЯ */
+        .biblio-wrapper {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 500px 1fr;
+            gap: 30px;
+            height: 750px;
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            padding: 20px;
+        }
+
+        /* Левая панель: Каталог источников */
+        .catalog-panel {
+            border-right: 2px dashed #4b4940;
+            padding-right: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .catalog-panel::-webkit-scrollbar { width: 6px; }
+        .catalog-panel::-webkit-scrollbar-track { background: #1a1a17; }
+        .catalog-panel::-webkit-scrollbar-thumb { background: #4b4940; }
+        .catalog-panel::-webkit-scrollbar-thumb:hover { background: var(--accent-red); }
+
+        .category-title {
+            color: var(--bg-base);
+            background: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            border-left: 5px solid var(--accent-red);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .doc-btn {
+            background: transparent;
+            color: var(--terminal-text);
+            border: 1px solid #4b4940;
+            padding: 10px 15px;
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .doc-btn .author { font-family: var(--font-mono); font-size: 0.75rem; color: #88c0d0; }
+        
+        .doc-btn:hover {
+            background: rgba(205, 200, 176, 0.1);
+            border-color: var(--accent-red);
+        }
+
+        .doc-btn.active {
+            background: var(--text-main);
+            color: var(--bg-base);
+            border-color: var(--accent-red);
+        }
+        .doc-btn.active .author { color: var(--bg-base); opacity: 0.8; }
+
+        /* Правая панель: Терминал скачивания */
+        .reader-panel {
+            padding: 20px;
+            background: #0a0a0c;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            font-family: var(--font-mono);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reader-header {
+            color: #88c0d0;
+            font-size: 0.9rem;
+            border-bottom: 2px dashed #4b4940;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 2;
+        }
+
+        .reader-console {
+            flex-grow: 1;
+            overflow-y: auto;
+            color: #a8a38f;
+            font-size: 1rem;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2;
+            padding-right: 10px;
+        }
+
+        .reader-console::-webkit-scrollbar { width: 4px; }
+        .reader-console::-webkit-scrollbar-thumb { background: #88c0d0; }
+
+        .reader-console span { word-wrap: break-word; }
+        
+        .log-connect { color: #ebcb8b; }
+        .log-progress { color: #a3be8c; letter-spacing: 2px; }
+        .log-title { color: var(--accent-red); font-size: 1.4rem; font-weight: bold; margin-top: 15px; margin-bottom: 10px; text-shadow: 0 0 5px rgba(178,67,56,0.3);}
+        .log-meta { color: #88c0d0; border-left: 2px solid #88c0d0; padding-left: 10px; margin-bottom: 15px; font-size: 0.9rem;}
+        .log-abstract { color: #cdc8b0; font-family: var(--font-main); font-size: 1.1rem; line-height: 1.8; text-align: justify;}
+
+        /* Анимация сканирования на фоне терминала */
+        .reader-scanner {
+            position: absolute;
+            top: -100px; left: 0; right: 0; height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(136, 192, 208, 0.1) 90%, rgba(136, 192, 208, 0.4) 100%);
+            border-bottom: 1px solid #88c0d0;
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scanning {
+            animation: scanAnim 1.5s linear infinite;
+            opacity: 1;
+        }
+
+        @keyframes scanAnim {
+            0% { top: -100px; }
+            100% { top: 100%; }
+        }
+
+        @media (max-width: 1024px) {
+            .biblio-wrapper { grid-template-columns: 1fr; height: auto; }
+            .catalog-panel { border-right: none; border-bottom: 2px dashed #4b4940; padding-bottom: 20px; max-height: 400px; }
+            .reader-panel { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html" class="active">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag" style="background: var(--text-main); color: var(--bg-base);">[ БИБЛИОГРАФИЯ_REF ]</span>
+            <h1 class="chapter-title">Список Литературы</h1>
+        </div>
+
+        <div class="quote-block">
+            Любая надежная архитектура строится на плечах предшественников. В данном проекте проанализирован 101 источник информации: от официальных спецификаций (Datasheets) и правительственных стандартов безопасности (NIST) до научных трудов по радиофизике и топологии ячеистых сетей.
+        </div>
+
+        <div class="biblio-wrapper">
+            <div class="catalog-panel" id="catalog">
+                </div>
+
+            <div class="reader-panel">
+                <div class="reader-scanner" id="scanner-line"></div>
+                <div class="reader-header">
+                    <span>CONNECTION: <span id="conn-status" style="color: #b24338;">OFFLINE</span></span>
+                    <span>PROTOCOL: HTTPS / TLS 1.3</span>
+                </div>
+                <div class="reader-console" id="console">
+                    <span>Ожидание запроса к удаленным базам данных...</span>
+                    <span>Выберите документ из левого каталога для извлечения информации.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title" style="color: var(--bg-base);">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const rawDB = [
+            { cat: "I. Официальные спецификации, стандарты и Datasheet (Аппаратная база)", docs: [
+                { id: "1", title: "SX1261/SX1262 Long Range, Low Power, sub-GHz RF Transceiver Datasheet", author: "Semtech Corporation", server: "semtech.com" },
+                { id: "2", title: "AN1200.22. LoRa™ Modulation Basics", author: "Semtech Corporation", server: "semtech.com" },
+                { id: "3", title: "AN1200.13. Recommendations for Best Performance with LoRa", author: "Semtech Corporation", server: "semtech.com" },
+                { id: "4", title: "nRF52840 Product Specification v1.7", author: "Nordic Semiconductor", server: "nordicsemi.com" },
+                { id: "5", title: "nRF52 Series Power Profiling. Application Note", author: "Nordic Semiconductor", server: "nordicsemi.com" },
+                { id: "6", title: "ESP32 Series Datasheet. V4.1", author: "Espressif Systems", server: "espressif.com" },
+                { id: "7", title: "ESP32 Technical Reference Manual (eFuse и Flash Encryption)", author: "Espressif Systems", server: "espressif.com" },
+                { id: "8", title: "ESP-IDF Programming Guide: Secure Boot V2 and Flash Encryption", author: "Espressif Systems", server: "espressif.com" },
+                { id: "9", title: "STM32WLE5J8 - Multiprotocol LPWAN 32-bit Arm Cortex-M4 MCUs", author: "STMicroelectronics", server: "st.com" },
+                { id: "10", title: "BQ24650 Synchronous Switch-Mode Battery Charge Controller for Solar Power", author: "Texas Instruments", server: "ti.com" },
+                { id: "11", title: "CN3791 MPPT Solar Battery Charger IC", author: "Consonance Electron", server: "consonance-elec.com" },
+                { id: "12", title: "NEO-8Q/NEO-M8 Hardware Integration Manual", author: "U-blox", server: "u-blox.com" },
+                { id: "13", title: "LoRaWAN® 1.0.4 Specification", author: "LoRa Alliance", server: "lora-alliance.org" },
+                { id: "14", title: "LoRaWAN® Regional Parameters v1.0.3 (433/868/915 МГц)", author: "LoRa Alliance", server: "lora-alliance.org" }
+            ]},
+            { cat: "II. Математическая криптография и стандарты ИБ", docs: [
+                { id: "15", title: "FIPS PUB 197: Advanced Encryption Standard (AES)", author: "NIST", server: "csrc.nist.gov" },
+                { id: "16", title: "FIPS PUB 180-4: Secure Hash Standard (SHS)", author: "NIST", server: "csrc.nist.gov" },
+                { id: "17", title: "NIST Special Publication 800-38A: Recommendation for Block Cipher Modes of Operation (CTR)", author: "Dworkin, M.", server: "csrc.nist.gov" },
+                { id: "18", title: "NIST SP 800-57 Part 1 Rev. 5: Recommendation for Key Management", author: "Barker, E.", server: "csrc.nist.gov" },
+                { id: "19", title: "RFC 7748: Elliptic Curves for Security", author: "Langley, A. et al.", server: "ietf.org" },
+                { id: "20", title: "RFC 5869: HMAC-based Extract-and-Expand Key Derivation Function (HKDF)", author: "Krawczyk, H.", server: "ietf.org" },
+                { id: "21", title: "Curve25519: New Diffie-Hellman Speed Records", author: "Bernstein, D. J.", server: "cr.yp.to" },
+                { id: "22", title: "Прикладная криптография. Протоколы, алгоритмы, исходные тексты на С", author: "Шнайер Б.", server: "rsl.ru" },
+                { id: "23", title: "Практическая криптография", author: "Фергюсон Н., Шнайер Б., Кохно Т.", server: "rsl.ru" },
+                { id: "24", title: "Introduction to Modern Cryptography. 3rd Edition", author: "Katz, J., Lindell, Y.", server: "crcpress.com" },
+                { id: "25", title: "New Directions in Cryptography", author: "Diffie, W., Hellman, M.", server: "ieee.org" }
+            ]},
+            { cat: "III. Радиофизика, теория связи и антенны", docs: [
+                { id: "26", title: "Цифровая связь. Теоретические основы и практическое применение", author: "Скляр Б.", server: "rsl.ru" },
+                { id: "27", title: "Цифровая связь", author: "Прокис Дж.", server: "rsl.ru" },
+                { id: "28", title: "Антенны. В 2-х томах", author: "Ротхаммель К., Алоис К.", server: "rsl.ru" },
+                { id: "29", title: "Antenna Theory: Analysis and Design", author: "Balanis, C. A.", server: "wiley.com" },
+                { id: "30", title: "Antennas for All Applications", author: "Kraus, J. D.", server: "mcgraw-hill.com" },
+                { id: "31", title: "Основы телекоммуникаций и сетей передачи данных", author: "Галкин В. А.", server: "rsl.ru" },
+                { id: "32", title: "ITU-R P.1546-6. Method for point-to-area predictions", author: "ITU", server: "itu.int" },
+                { id: "33", title: "ITU-R P.525-4. Calculation of free-space attenuation", author: "ITU", server: "itu.int" },
+                { id: "34", title: "Antennas and Propagation for Wireless Communication Systems", author: "Saunders, S. R.", server: "wiley.com" }
+            ]},
+            { cat: "IV. Архитектура сетей, маршрутизация и Mesh", docs: [
+                { id: "35", title: "Компьютерные сети (Computer Networks)", author: "Таненбаум Э.", server: "rsl.ru" },
+                { id: "36", title: "Компьютерные сети. Принципы, технологии, протоколы", author: "Олифер В. Г.", server: "rsl.ru" },
+                { id: "37", title: "RFC 3561: Ad hoc On-Demand Distance Vector (AODV) Routing", author: "Perkins, C.", server: "ietf.org" },
+                { id: "38", title: "RFC 3626: Optimized Link State Routing Protocol (OLSR)", author: "Clausen, T.", server: "ietf.org" },
+                { id: "39", title: "RFC 4728: The Dynamic Source Routing Protocol (DSR)", author: "Johnson, D.", server: "ietf.org" },
+                { id: "40", title: "RFC 4838: Delay-Tolerant Networking Architecture", author: "Cerf, V.", server: "ietf.org" },
+                { id: "41", title: "RFC 6130: Mobile Ad Hoc Network (MANET) Neighborhood Discovery Protocol", author: "Baccelli, E.", server: "ietf.org" },
+                { id: "42", title: "Computer Networking: A Top-Down Approach", author: "Kurose, J. F.", server: "pearson.com" }
+            ]},
+            { cat: "V. Научные статьи и исследования (IEEE, ACM)", docs: [
+                { id: "43", title: "Understanding the Limits of LoRaWAN", author: "Adelantado F. et al.", server: "ieee.org" },
+                { id: "44", title: "A Study of LoRa: Long Range & Low Power Networks for IoT", author: "Augustin A. et al.", server: "mdpi.com" },
+                { id: "45", title: "Long-range communications in unlicensed bands", author: "Centenaro M. et al.", server: "ieee.org" },
+                { id: "46", title: "Do LoRa Low-Power Wide-Area Networks Scale?", author: "Bor M. C. et al.", server: "acm.org" },
+                { id: "47", title: "Testing of Communication Range and Reliability in LoRaWAN", author: "Kuzminykh, I.", server: "acm.org" },
+                { id: "48", title: "Multi-Hop Routing in LoRa Networks", author: "Leonardi L.", server: "ieee.org" },
+                { id: "49", title: "Cyber and Physical Security Vulnerabilities in Mesh Networks", author: "Ali B.", server: "ieee.org" },
+                { id: "50", title: "A Survey of Man In The Middle Attacks", author: "Conti M.", server: "ieee.org" },
+                { id: "51", title: "A Survey on Sybil Attacks in Wireless Sensor Networks", author: "Cui, Y.", server: "ieee.org" },
+                { id: "52", title: "Wormhole Attack Detection Algorithms in Wireless Network", author: "Li, S.", server: "ieee.org" },
+                { id: "53", title: "Performance Evaluation of a LoRa Mesh Networking Protocol", author: "Pötsch A.", server: "ieee.org" },
+                { id: "54", title: "Chirp spread spectrum as a modulation technique", author: "Reynders, B.", server: "ieee.org" }
+            ]},
+            { cat: "VI. Прикладная электроника, питание и ПК", docs: [
+                { id: "55", title: "Batteries in a Portable World", author: "Buchmann, I.", server: "cadex.com" },
+                { id: "56", title: "Handbook of Batteries. 4th Edition (Химия LiFePO4)", author: "Linden, D.", server: "mcgraw-hill.com" },
+                { id: "57", title: "Электроника для начинающих и не только", author: "Максимов А.", server: "rsl.ru" },
+                { id: "58", title: "Programming the Raspberry Pi: Getting Started with Python", author: "Monk, S.", server: "raspberrypi.org" },
+                { id: "59", title: "The Official Raspberry Pi Beginner's Guide", author: "Halfacree, G.", server: "raspberrypi.org" },
+                { id: "60", title: "Understanding Maximum Power Point Tracking (MPPT)", author: "Texas Instruments", server: "ti.com" },
+                { id: "61", title: "Теоретические основы электротехники. Электрические цепи", author: "Бессонов Л.А.", server: "rsl.ru" },
+                { id: "62", title: "Солнечная энергетика: расчет и проектирование автономных систем", author: "Абдуллаев А.", server: "rsl.ru" }
+            ]},
+            { cat: "VII. Децентрализованные протоколы и софт", docs: [
+                { id: "63", title: "Protocol Buffers (Protobuf) Developer Guide", author: "Google LLC", server: "protobuf.dev" },
+                { id: "64", title: "MQTT Version 5.0 Specification", author: "OASIS Standard", server: "oasis-open.org" },
+                { id: "65", title: "Matrix Protocol Architecture and Specification", author: "The Matrix.org Foundation", server: "spec.matrix.org" },
+                { id: "66", title: "Docker Documentation: Containerization and Microservices", author: "Docker Inc.", server: "docs.docker.com" },
+                { id: "67", title: "Mosquitto MQTT Broker Documentation", author: "Eclipse Foundation", server: "mosquitto.org" },
+                { id: "68", title: "Reactive Microservices Architecture: Design Principles", author: "Lightbend", server: "lightbend.com" },
+                { id: "69", title: "Microservices: a definition of this new architectural term", author: "Fowler, M.", server: "martinfowler.com" },
+                { id: "70", title: "The Docker Book: Containerization is the new virtualization", author: "Turnbull, J.", server: "dockerbook.com" }
+            ]},
+            { cat: "VIII. Open-Source проекты и репозитории", docs: [
+                { id: "71", title: "Official Meshtastic Documentation", author: "Meshtastic Project", server: "meshtastic.org" },
+                { id: "72", title: "Firmware Source Code (C/C++)", author: "Meshtastic GitHub", server: "github.com" },
+                { id: "73", title: "Android Client Application Source Code", author: "Meshtastic GitHub", server: "github.com" },
+                { id: "74", title: "Python API and CLI interface", author: "Meshtastic GitHub", server: "github.com" },
+                { id: "75", title: "Disaster Radio Project. Open Source Mesh Network", author: "Disaster Radio", server: "disaster.radio" },
+                { id: "76", title: "Reticulum Network Stack. Cryptography-based networking", author: "Reticulum", server: "reticulum.network" },
+                { id: "77", title: "Matrix-NIO. Python Matrix client library", author: "Matrix-NIO GitHub", server: "github.com" },
+                { id: "78", title: "Home Assistant. Open source home automation", author: "Home Assistant", server: "home-assistant.io" }
+            ]},
+            { cat: "IX. Правовое регулирование и радиоконтроль", docs: [
+                { id: "79", title: "Radio Regulations. Articles", author: "ITU", server: "itu.int" },
+                { id: "80", title: "EN 300 220-1. Short Range Devices (SRD)", author: "ETSI", server: "etsi.org" },
+                { id: "81", title: "Title 47 of the CFR, Part 15 - Radio Frequency Devices", author: "FCC", server: "fcc.gov" },
+                { id: "82", title: "Решение ГКРЧ «О выделении полос для устройств малого радиуса действия»", author: "Минкомсвязь РФ", server: "minsvyaz.ru" },
+                { id: "83", title: "Постановление РФ «О порядке регистрации РЭС»", author: "Правительство РФ", server: "pravo.gov.ru" },
+                { id: "84", title: "Федеральный закон 'О связи' № 126-ФЗ", author: "РФ", server: "pravo.gov.ru" },
+                { id: "85", title: "ERC Recommendation 70-03 relating to the use of SRD", author: "CEPT", server: "cept.org" }
+            ]},
+            { cat: "X. Топография, геоинформатика и карты", docs: [
+                { id: "86", title: "Shuttle Radar Topography Mission (SRTM) Elevation Data", author: "NASA", server: "jpl.nasa.gov" },
+                { id: "87", title: "Radio Mobile. RF Propagation Simulation Software", author: "VE2DBE", server: "ve2dbe.com" },
+                { id: "88", title: "HeyWhatsThat. Path Profiler and Line of Sight", author: "HeyWhatsThat", server: "heywhatsthat.com" },
+                { id: "89", title: "OSM Data extract and Map rendering", author: "OpenStreetMap Foundation", server: "openstreetmap.org" },
+                { id: "90", title: "QGIS Geographic Information System", author: "QGIS Development Team", server: "qgis.org" }
+            ]},
+            { cat: "XI. Информационная свобода, социология и цензура", docs: [
+                { id: "91", title: "Информационная эпоха: экономика, общество и культура", author: "Кастельс М.", server: "hse.ru" },
+                { id: "92", title: "Личное дело (Permanent Record)", author: "Сноуден Э.", server: "eksmo.ru" },
+                { id: "93", title: "Access Controlled: Shaping of Power in Cyberspace", author: "Deibert, R.", server: "mitpress.mit.edu" },
+                { id: "94", title: "The Future of the Internet—And How to Stop It", author: "Zittrain, J.", server: "yale.edu" },
+                { id: "95", title: "Cypherpunks: Freedom and the Future of the Internet", author: "Assange, J.", server: "orbooks.com" },
+                { id: "96", title: "Robust De-anonymization of Large Sparse Datasets", author: "Narayanan, A.", server: "ieee.org" },
+                { id: "97", title: "The Master Switch: The Rise and Fall of Information Empires", author: "Wu, T.", server: "knopf.com" },
+                { id: "98", title: "Consent of the Networked", author: "MacKinnon, R.", server: "basicbooks.com" }
+            ]},
+            { cat: "XII. Утилиты и программные инструменты (Tools)", docs: [
+                { id: "99", title: "Wireshark. Network Protocol Analyzer", author: "Wireshark", server: "wireshark.org" },
+                { id: "100", title: "GNU Radio. Open Software Radio Ecosystem", author: "GNU Radio", server: "gnuradio.org" },
+                { id: "101", title: "Esptool. Espressif SoC serial bootloader utility", author: "Esptool GitHub", server: "github.com" }
+            ]}
+        ];
+
+        const catalogEl = document.getElementById('catalog');
+        const consoleEl = document.getElementById('console');
+        const statusEl = document.getElementById('conn-status');
+        const scannerLine = document.getElementById('scanner-line');
+        
+        let currentAnimation = null;
+
+        // Генерация каталога из 101 источника
+        rawDB.forEach(cat => {
+            const catTitle = document.createElement('div');
+            catTitle.className = 'category-title';
+            catTitle.innerText = cat.cat;
+            catalogEl.appendChild(catTitle);
+
+            cat.docs.forEach(doc => {
+                const btn = document.createElement('button');
+                btn.className = 'doc-btn';
+                btn.innerHTML = `<strong>[${doc.id}] ${doc.title}</strong><span class="author">${doc.author}</span>`;
+                btn.onclick = () => loadDocument(doc, btn);
+                catalogEl.appendChild(btn);
+            });
+        });
+
+        // Функция обработки клика и анимации скачивания
+        function loadDocument(doc, btnElement) {
+            document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            if(currentAnimation) clearTimeout(currentAnimation);
+            consoleEl.innerHTML = '';
+            
+            statusEl.innerText = "CONNECTING...";
+            statusEl.style.color = "#ebcb8b";
+            scannerLine.classList.add('scanning');
+
+            let steps = [
+                `<span class="log-connect">> DNS-Резолвинг: ${doc.server}... ОК</span>`,
+                `<span class="log-connect">> Установка защищенного соединения TCP/TLS 1.3... ОК</span>`,
+                `<span class="log-sys">> Запрос записи базы данных ID = [0x0${doc.id}]...</span>`,
+                `<span class="log-progress">> DOWNLOAD: [##--------] 20%</span>`,
+                `<span class="log-progress">> DOWNLOAD: [#####-----] 50%</span>`,
+                `<span class="log-progress">> DOWNLOAD: [#########-] 90%</span>`,
+                `<span class="log-progress">> DOWNLOAD: [##########] 100%</span>`,
+                `<span class="log-connect">> Соединение закрыто. Расшифровка локальной копии (AES-256)...</span>`
+            ];
+
+            let delay = 0;
+            steps.forEach((step, index) => {
+                currentAnimation = setTimeout(() => {
+                    consoleEl.innerHTML += step;
+                    consoleEl.scrollTop = consoleEl.scrollHeight;
+                }, delay);
+                delay += 300 + Math.random() * 200; 
+            });
+
+            // Вывод данных документа
+            currentAnimation = setTimeout(() => {
+                statusEl.innerText = "DATA_RETRIEVED";
+                statusEl.style.color = "#a3be8c";
+                scannerLine.classList.remove('scanning');
+                
+                const finalHtml = `
+                    <div class="log-title">${doc.title}</div>
+                    <div class="log-meta">
+                        НОМЕР В СПИСКЕ: ${doc.id} ИЗ 101<br>
+                        АВТОР/ОРГАНИЗАЦИЯ: ${doc.author}<br>
+                        СЕРВЕР ИСТОЧНИКА: ${doc.server}
+                    </div>
+                    <div class="log-abstract">Данный документ является фундаментальным источником, использованным при проведении исследования в рамках Индивидуального Проекта. Содержит спецификации, технические параметры, математические расчеты или правовые нормы, на которые опирается архитектура децентрализованной автономной сети. Все права принадлежат авторам и издателям (${doc.author}).</div>
+                `;
+                consoleEl.innerHTML += finalHtml;
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }, delay + 400);
+        }
+    </script>
+</body>
+</html>

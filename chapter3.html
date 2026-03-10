@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГЛАВА 03 // ТАКТИЧЕСКАЯ СВЯЗЬ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chapter-container {
+            padding: 120px 5vw 60px 5vw;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .chapter-header {
+            margin-bottom: 50px;
+            border-bottom: 4px solid var(--text-main);
+            padding-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .chapter-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        .text-block {
+            background: rgba(209, 205, 183, 0.95);
+            padding: 40px;
+            border: 2px solid var(--border-dark);
+            box-shadow: 10px 10px 0 rgba(75, 73, 64, 0.15);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .text-block h3 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-red);
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-block p, .text-block ul {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+        
+        .text-block ul { margin-left: 20px; }
+
+        .math-box {
+            background: var(--text-main);
+            border: 2px solid var(--accent-red);
+            padding: 20px;
+            margin: 30px 0;
+            font-family: var(--font-mono);
+            color: var(--bg-base);
+            font-size: 1.2rem;
+            text-align: center;
+            box-shadow: 5px 5px 0 rgba(178, 67, 56, 0.3);
+        }
+
+        .quote-block {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 40px;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            border-left: 10px solid var(--accent-red);
+            margin-bottom: 40px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        .quote-block::before {
+            content: 'PHYSICS_ENGINE';
+            position: absolute; top: 10px; right: 15px;
+            font-size: 0.8rem; opacity: 0.5;
+        }
+
+        /* МАСШТАБНАЯ СИМУЛЯЦИЯ ГЛАВЫ 3 */
+        .simulation-wrapper {
+            pointer-events: auto;
+            margin-bottom: 80px;
+            grid-column: 1 / -1; 
+        }
+
+        .simulation-panel {
+            background: var(--terminal-bg);
+            border: 4px solid var(--border-dark);
+            box-shadow: 15px 15px 0 var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            height: 800px;
+            position: relative;
+        }
+
+        .sim-header {
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 15px 25px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        /* Ползунки управления (Sliders) */
+        .sim-controls {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: #1a1a17;
+            padding: 15px 25px;
+            border-bottom: 2px dashed #4b4940;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            color: #cdc8b0;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            width: 250px;
+        }
+
+        .control-group label { margin-bottom: 5px; display: flex; justify-content: space-between; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            background: var(--accent-red);
+            cursor: pointer;
+            margin-top: -6px;
+            border-radius: 0;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: #4b4940;
+        }
+        input[type=range]:focus { outline: none; }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100% - 120px);
+        }
+
+        #ch3-canvas {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center top, #2a2a25 0%, #1a1a17 100%);
+            display: block;
+        }
+
+        .sim-terminal {
+            border-left: 2px dashed #4b4940;
+            padding: 25px;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: #a8a38f;
+            overflow-y: auto;
+            background: #0d0d0a;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: inset 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .log-err { color: var(--accent-red); font-weight: bold; text-shadow: 0 0 8px rgba(178,67,56,0.6); }
+        .log-sys { color: #88c0d0; }
+        .log-warn { color: #ebcb8b; font-weight: bold; }
+        .log-ok { color: #a3be8c; font-weight: bold; }
+        .log-math { color: #b8b19e; border-left: 2px solid #b8b19e; padding-left: 10px; font-size: 0.9rem;}
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-noise"></div>
+
+    <div class="canvas-bg-wrapper">
+        <canvas id="home-canvas"></canvas>
+    </div>
+
+    <nav>
+        <div class="nav-logo"><span class="blinking-cursor">■</span> АРХИВ</div>
+        <div class="nav-links">
+            <a href="index.html">ИНДЕКС</a>
+            <a href="intro.html">ВВЕДЕНИЕ</a>
+            <a href="chapter1.html">ГЛ_01</a>
+            <a href="chapter2.html">ГЛ_02</a>
+            <a href="chapter3.html" class="active">ГЛ_03</a>
+            <a href="chapter4.html">ГЛ_04</a>
+            <a href="chapter8.html">ГЛ_08</a>
+        </div>
+    </nav>
+
+    <div class="chapter-container">
+        <div class="chapter-header">
+            <span class="system-tag">[ ДОКУМЕНТ_03 ]</span>
+            <h1 class="chapter-title">Тактическая Связь</h1>
+        </div>
+
+        <div class="quote-block">
+            Возврат к классическим портативным трансиверам часто рассматривается как панацея от цифровой зависимости. Однако физику распространения радиоволн обмануть невозможно. Попытки увеличить дальность за счет грубого наращивания мощности передатчика обречены на провал из-за кривизны Земли.
+        </div>
+
+        <div class="content-grid">
+            <div class="text-column">
+                <div class="text-block">
+                    <h3>3.1. Парадокс мощности и Радиогоризонт</h3>
+                    <p>Классические рации работают в диапазонах <span class="tooltip" data-text="Very High Frequency (136-174 МГц) и Ultra High Frequency (400-470 МГц). Радиоволны этих частот распространяются строго прямолинейно, подобно лучу света.">VHF и UHF</span>. Эти волны не огибают земную поверхность и не отражаются от ионосферы. Связь возможна исключительно в пределах прямой видимости.</p>
+                    
+                    <p>Максимальная теоретическая дальность связи (без учета препятствий) жестко ограничена оптическим горизонтом, который рассчитывается по формуле:</p>
+                    
+                    <div class="math-box">
+                        D = 4.12 × (√h₁ + √h₂)
+                    </div>
+                    <p style="text-align: center; font-size: 0.9rem; opacity: 0.7;">где D — дальность (км), а h₁ и h₂ — высота подвеса антенн (м).</p>
+                    
+                    
+
+                    <p>Если два оператора стоят на земле (высота рации ~1.5 метра), радиогоризонт наступит уже через <strong>10 километров</strong>. Увеличение мощности передатчика с 5 Вт до 50 Вт не даст никакого прироста дальности — сигнал просто улетит в космос по касательной, так как Земля "закругляется" вниз. Вы лишь быстрее разрядите аккумулятор.</p>
+                </div>
+
+                <div class="text-block">
+                    <h3>3.2. Зона Френеля</h3>
+                    <p>Даже если между антеннами есть геометрическая прямая видимость, связь может прерваться. Электромагнитная волна распространяется не тонким лучом лазера, а в виде эллипсоида революции — <span class="tooltip" data-text="Область пространства в виде эллипса между передатчиком и приемником. Для стабильной связи минимум 60% площади этого эллипса должны быть свободны от препятствий.">Зоны Френеля</span>.</p>
+                    
+                    <p>Если в этот эллипс попадают кроны деревьев, холмы или здания (даже если они не перекрывают саму линию прямой видимости), радиоволна отражается от них, меняет фазу и приходит на приемник с опозданием, гася основной сигнал (многолучевая интерференция).</p>
+                </div>
+            </div>
+
+            <div class="text-column">
+                <div class="text-block" style="background: var(--text-main); color: var(--bg-base); border-color: var(--accent-red);">
+                    <h3 style="color: var(--bg-base); border-left-color: var(--bg-base);">3.3. Уязвимости цифровых стандартов</h3>
+                    <p>Современный стандарт цифровой радиосвязи <span class="tooltip" data-text="Digital Mobile Radio — использует таймслоты (TDMA) и вокодеры (AMBE+2) для оцифровки голоса. Популярен в рациях Motorola и Baofeng.">DMR</span>, безусловно, превосходит аналоговые FM-рации благодаря возможности использования криптографии (AES-256). Однако для децентрализованных гражданских сетей он непригоден:</p>
+                    <ul>
+                        <li><strong>Отсутствие Mesh-маршрутизации:</strong> DMR-рации не умеют автоматически пересылать пакеты данных друг через друга по цепочке. Для расширения сети требуется установка дорогостоящего стационарного репитера (что возвращает нас к проблеме SPOF).</li>
+                        <li><strong>Юридический фактор:</strong> Законодательство большинства стран категорически запрещает передачу зашифрованных сообщений в открытых диапазонах LPD/PMR и на радиолюбительских частотах.</li>
+                        <li><strong>Риск пеленгации:</strong> Классическая рация излучает мощный узкополосный сигнал (5-10 Ватт). Комплексы радиоконтроля мгновенно засекают такое излучение методом <span class="tooltip" data-text="Time Difference of Arrival. Разница во времени прихода сигнала на 3 и более базовые станции позволяет вычислить точное положение передатчика.">TDOA</span>. Зашифрованный сигнал (AES) скрыть невозможно — он звучит в эфире как громкий белый шум.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="simulation-wrapper">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" style="font-size: 2.5rem; color: var(--accent-red);">[ СИМУЛЯЦИЯ: ФИЗИКА РАДИОГОРИЗОНТА ]</h2>
+                    <p style="font-family: var(--font-mono); margin-top: 10px; font-size: 1.1rem;">
+                        > ИНСТРУМЕНТ: Калькулятор прямой видимости (LOS). Изменяйте высоту мачт и расстояние, чтобы увидеть влияние кривизны Земли на прохождение радиосигнала.
+                    </p>
+                </div>
+
+                <div class="simulation-panel">
+                    <div class="sim-header">
+                        <span>РАСЧЕТ ВЛИЯНИЯ КРИВИЗНЫ ПЛАНЕТЫ НА VHF/UHF СИГНАЛ</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <div class="control-group">
+                            <label>Дистанция связи: <span id="val-dist" style="color: var(--accent-red); font-weight: bold;">30 км</span></label>
+                            <input type="range" id="slider-dist" min="5" max="80" value="30" oninput="updateSimParams()">
+                        </div>
+                        <div class="control-group">
+                            <label>Высота TX (Мачта 1): <span id="val-h1">15 м</span></label>
+                            <input type="range" id="slider-h1" min="1.5" max="100" value="15" step="0.5" oninput="updateSimParams()">
+                        </div>
+                        <div class="control-group">
+                            <label>Высота RX (Мачта 2): <span id="val-h2">15 м</span></label>
+                            <input type="range" id="slider-h2" min="1.5" max="100" value="15" step="0.5" oninput="updateSimParams()">
+                        </div>
+                    </div>
+
+                    <div class="sim-body">
+                        <canvas id="ch3-canvas"></canvas>
+                        
+                        <div class="sim-terminal" id="ch3-terminal">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-title">[ БАЗА ДАННЫХ ]</div>
+            <p>ИССЛЕДОВАТЕЛЬСКИЙ И ИНЖЕНЕРНЫЙ ПРОЕКТ // ЭЛЕКТРОСТАЛЬСКИЙ КОЛЛЕДЖ // 2026</p>
+            <div class="line"></div>
+            <p class="eof">КОНЕЦ ДОКУМЕНТА_</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const cvs = document.getElementById('ch3-canvas');
+        const cx = cvs.getContext('2d');
+        const term = document.getElementById('ch3-terminal');
+
+        let simTime = 0;
+        
+        // Параметры симуляции
+        let params = {
+            distKm: 30,
+            h1: 15,
+            h2: 15,
+            maxDist: 0,
+            isConnected: true
+        };
+
+        // Физика планеты для отрисовки
+        const earthRadiusDraw = 2500; // Условный радиус для canvas
+        let earthCenterY = 0;
+
+        function resizeCanvas() {
+            const rect = cvs.parentElement.getBoundingClientRect();
+            cvs.width = rect.width;
+            cvs.height = rect.height;
+            earthCenterY = cvs.height + earthRadiusDraw - 80;
+            updateSimParams();
+        }
+
+        function logCalc(msg, type="log-sys") {
+            term.innerHTML += `<span class="${type}">${msg}</span>`;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Обновление параметров с ползунков
+        function updateSimParams() {
+            params.distKm = parseFloat(document.getElementById('slider-dist').value);
+            params.h1 = parseFloat(document.getElementById('slider-h1').value);
+            params.h2 = parseFloat(document.getElementById('slider-h2').value);
+
+            document.getElementById('val-dist').innerText = params.distKm + " км";
+            document.getElementById('val-h1').innerText = params.h1 + " м";
+            document.getElementById('val-h2').innerText = params.h2 + " м";
+
+            // МАТЕМАТИКА РАДИОГОРИЗОНТА
+            // D = 4.12 * (sqrt(h1) + sqrt(h2))
+            params.maxDist = 4.12 * (Math.sqrt(params.h1) + Math.sqrt(params.h2));
+            params.isConnected = params.distKm <= params.maxDist;
+
+            term.innerHTML = ''; // Очистка терминала
+            logCalc(`[РАСЧЕТ] Перерасчет параметров физической среды...`);
+            logCalc(`Оптическая видимость: D = 4.12 * (√${params.h1.toFixed(1)} + √${params.h2.toFixed(1)})`, "log-math");
+            logCalc(`Максимальный радиогоризонт: ${params.maxDist.toFixed(2)} км`, "log-sys");
+            logCalc(`Фактическая дистанция: ${params.distKm.toFixed(2)} км`, "log-sys");
+            
+            if (params.isConnected) {
+                logCalc(`[СТАТУС] Прямая видимость (LOS) ОБЕСПЕЧЕНА.`, "log-ok");
+                logCalc(`[ИНФО] Сигнал успешно достигает приемника. Зона Френеля чиста.`, "log-sys");
+            } else {
+                let deficit = (params.distKm - params.maxDist).toFixed(2);
+                logCalc(`[КРИТИЧНО] Сигнал упирается в землю. Превышение на ${deficit} км.`, "log-err");
+                logCalc(`[СТАТУС] ОБРЫВ СВЯЗИ. Мощность передатчика не имеет значения.`, "log-err");
+                logCalc(`[РЕШЕНИЕ] Необходимо поднять мачты или использовать Mesh-ретранслятор.`, "log-warn");
+            }
+        }
+
+        // Вычисление Y на окружности Земли для данного X
+        function getEarthY(xPos) {
+            let dx = xPos - (cvs.width / 2);
+            // Уравнение окружности: dx^2 + dy^2 = R^2 => dy = sqrt(R^2 - dx^2)
+            let dy = Math.sqrt(Math.pow(earthRadiusDraw, 2) - Math.pow(dx, 2));
+            return earthCenterY - dy;
+        }
+
+        // Отрисовка
+        function renderScene() {
+            cx.clearRect(0, 0, cvs.width, cvs.height);
+            simTime++;
+
+            // 1. Отрисовка планеты
+            cx.beginPath();
+            cx.arc(cvs.width/2, earthCenterY, earthRadiusDraw, Math.PI, 0);
+            cx.fillStyle = '#1a1a17';
+            cx.fill();
+            cx.lineWidth = 3;
+            cx.strokeStyle = '#4b4940';
+            cx.stroke();
+
+            // Координаты баз по оси X
+            // 80 км растянем на 800 пикселей (1 км = 10px для визуала)
+            const pixelsPerKm = (cvs.width * 0.8) / 80;
+            const txX = cvs.width * 0.1;
+            const rxX = txX + (params.distKm * pixelsPerKm);
+
+            // Основания мачт (на поверхности земли)
+            const txGroundY = getEarthY(txX);
+            const rxGroundY = getEarthY(rxX);
+
+            // Высота мачт в пикселях (масштаб для наглядности)
+            const scaleH = 2; // 1 метр = 2px
+            const txTopY = txGroundY - (params.h1 * scaleH);
+            const rxTopY = rxGroundY - (params.h2 * scaleH);
+
+            // 2. Отрисовка мачт
+            cx.lineWidth = 4;
+            cx.strokeStyle = '#cdc8b0';
+            
+            // Мачта 1 (TX)
+            cx.beginPath(); cx.moveTo(txX, txGroundY); cx.lineTo(txX, txTopY); cx.stroke();
+            cx.fillStyle = '#b24338'; cx.beginPath(); cx.arc(txX, txTopY, 4, 0, Math.PI*2); cx.fill();
+            cx.fillStyle = '#cdc8b0'; cx.font = '12px monospace'; cx.fillText("TX", txX - 10, txTopY - 15);
+
+            // Мачта 2 (RX)
+            cx.beginPath(); cx.moveTo(rxX, rxGroundY); cx.lineTo(rxX, rxTopY); cx.stroke();
+            cx.fillStyle = params.isConnected ? '#88c0d0' : '#4b4940';
+            cx.beginPath(); cx.arc(rxX, rxTopY, 4, 0, Math.PI*2); cx.fill();
+            cx.fillStyle = '#cdc8b0'; cx.fillText("RX", rxX - 10, rxTopY - 15);
+
+            // 3. Зона Френеля (Эллипс) и Линия связи
+            let midX = (txX + rxX) / 2;
+            let midY = (txTopY + rxTopY) / 2;
+            let distPx = Math.hypot(rxX - txX, rxTopY - txTopY);
+            let angle = Math.atan2(rxTopY - txTopY, rxX - txX);
+
+            cx.save();
+            cx.translate(midX, midY);
+            cx.rotate(angle);
+            
+            // Зона Френеля (анимированная пульсация)
+            let fresnelWidth = 20 + Math.sin(simTime * 0.05) * 5;
+            cx.beginPath();
+            cx.ellipse(0, 0, distPx/2, fresnelWidth, 0, 0, Math.PI*2);
+            cx.strokeStyle = params.isConnected ? 'rgba(136, 192, 208, 0.3)' : 'rgba(178, 67, 56, 0.1)';
+            cx.fillStyle = params.isConnected ? 'rgba(136, 192, 208, 0.05)' : 'transparent';
+            cx.fill();
+            cx.setLineDash([10, 5]); cx.lineWidth = 1; cx.stroke();
+            cx.restore();
+
+            // Линия прямой видимости (LOS)
+            cx.setLineDash([]);
+            cx.beginPath(); cx.moveTo(txX, txTopY); cx.lineTo(rxX, rxTopY);
+            cx.strokeStyle = params.isConnected ? '#88c0d0' : '#b24338';
+            cx.lineWidth = 2; cx.stroke();
+
+            // 4. Проверка пересечения с землей
+            let groundMidY = getEarthY(midX);
+            if (!params.isConnected) {
+                // Точка коллизии с Землей
+                cx.beginPath(); cx.arc(midX, groundMidY, 15, 0, Math.PI*2);
+                cx.fillStyle = 'rgba(178, 67, 56, 0.5)'; cx.fill();
+                cx.strokeStyle = '#b24338'; cx.lineWidth = 2; cx.stroke();
+
+                // Искры поглощения сигнала
+                for(let i=0; i<3; i++) {
+                    let sparkX = midX + (Math.random()-0.5)*20;
+                    let sparkY = groundMidY + (Math.random()-0.5)*20;
+                    cx.fillStyle = '#ebcb8b'; cx.fillRect(sparkX, sparkY, 2, 2);
+                }
+
+                cx.fillStyle = '#b24338'; cx.font = 'bold 14px monospace';
+                cx.fillText("СИГНАЛ ЗАБЛОКИРОВАН РЕЛЬЕФОМ", midX - 100, groundMidY - 30);
+            }
+
+            // 5. Анимация радиоволн от передатчика
+            let waveRadius = (simTime % 100) * (distPx / 100);
+            cx.beginPath();
+            cx.arc(txX, txTopY, waveRadius, -Math.PI/2, Math.PI/2); // Полусфера
+            cx.strokeStyle = params.isConnected ? `rgba(136, 192, 208, ${1 - waveRadius/distPx})` : `rgba(178, 67, 56, ${1 - waveRadius/distPx})`;
+            cx.lineWidth = 2; cx.stroke();
+
+            requestAnimationFrame(renderScene);
+        }
+
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            renderScene();
+        });
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
